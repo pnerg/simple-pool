@@ -16,7 +16,6 @@
 package simplepool;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javascalautils.Try;
 
@@ -32,7 +31,7 @@ public interface Pool<T> {
 	/**
 	 * Request a object instance from the pool. <br>
 	 * If no free objects this method waits until an object is returned. <br>
-	 * <b>Warning! This means that the thread may be held here forever.<b>
+	 * <b>Warning! This means that the thread may be held here forever.</b>
 	 * 
 	 * @return The object instance
 	 */
