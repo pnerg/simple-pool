@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Wrapper for pooled object. <br>
  * Keeps state information such as when the object last was used, i.e. pooled and if the object is valid.
  * @author Peter Nerg
+ * @param V The type of the value kept by this instance
  */
 final class PooledInstance<V> {
     /** The pooled object instance. */
@@ -29,6 +30,10 @@ final class PooledInstance<V> {
     private final AtomicBoolean inUse = new AtomicBoolean(false);
     private final long lastUsed = System.currentTimeMillis();
 
+    /**
+     * Creates a wrapper instance
+     * @param object The object instance to wrap
+     */
     PooledInstance(V object) {
         this.instance = object;
     }
@@ -44,10 +49,18 @@ final class PooledInstance<V> {
         return inUse.compareAndSet(false, true);
     }
 
+    /**
+     * The last time the wrapped object was used.
+     * @return Time in millis
+     */
     long lastUsed() {
     	return lastUsed;
     }
 
+    /**
+     * Get the wrapped object instance
+     * @return The object instance
+     */
     V instance() {
     	return instance;
     }
