@@ -20,10 +20,10 @@ import javascalautils.ThrowableFunction0;
 /**
  * @author Peter Nerg
  */
-class PoolImpl<T> implements Pool<T> {
-	private final ThrowableFunction0<T> factory;
+final class PoolImpl<T> implements Pool<T> {
+	private final ThrowableFunction0<T> instanceFactory;
 
-	PoolImpl(ThrowableFunction0<T> factory) {
-		this.factory = factory;
+	PoolImpl(ThrowableFunction0<T> instanceFactory) {
+		this.instanceFactory = instanceFactory;
 	}
 }
