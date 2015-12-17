@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Peter Nerg
+ *  Copyright 2015 Peter Nerg
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,25 +15,20 @@
  */
 package simplepool;
 
-import javascalautils.ThrowableFunction0;
+import org.junit.Test;
 
 /**
- * Factory for creating pool instances.
+ * Test the class {@link Factory}
  * @author Peter Nerg
  */
-public final class Factory<T> {
-	
-	private final ThrowableFunction0<T> instanceFactory;
+public class TestFactory extends BaseAssert {
 
-	private Factory(ThrowableFunction0<T> instanceFactory) {
-		this.instanceFactory = instanceFactory;
+	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject());
+	
+	@Test
+	public void createWithOnlyFactory() {
+		Pool<PoolableObject> pool = factory.create();
+		assertNotNull(pool);
 	}
 	
-	public static <T> Factory<T> poolFor(ThrowableFunction0<T> instanceFactory){ 
-		return new Factory<>(instanceFactory);
-	}
-	
-	public Pool<T> create() {
-		return new PoolImpl<>(instanceFactory);
-	}
 }
