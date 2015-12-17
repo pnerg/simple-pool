@@ -15,15 +15,34 @@
  */
 package simplepool;
 
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+
+import javascalautils.Failure;
+import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
+import javascalautils.Try;
 
 /**
  * @author Peter Nerg
  */
 final class PoolImpl<T> implements Pool<T> {
 	private final ThrowableFunction0<T> instanceFactory;
+	private final int maxSize;
+	private final Option<Predicate<T>> validator;
 
-	PoolImpl(ThrowableFunction0<T> instanceFactory) {
+	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Option<Predicate<T>> validator) {
 		this.instanceFactory = instanceFactory;
+		this.maxSize = maxSize;
+		this.validator = validator;
+	}
+	
+	/* (non-Javadoc)
+	 * @see simplepool.Pool#getInstance(long, java.util.concurrent.TimeUnit)
+	 */
+	@Override
+	public Try<T> getInstance(long waitTime, TimeUnit timeUnit) {
+		// TODO Auto-generated method stub
+		return new Failure<>(new UnsupportedOperationException());
 	}
 }

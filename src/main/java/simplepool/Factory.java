@@ -15,8 +15,13 @@
  */
 package simplepool;
 
-import javascalautils.ThrowableFunction0;
+import static javascalautils.Option.None;
+import static javascalautils.OptionCompanion.Some;
+import static javascalautils.Validator.requireNonNull;
+import java.util.function.Predicate;
 
+import javascalautils.Option;
+import javascalautils.ThrowableFunction0;
 /**
  * Factory for creating pool instances.
  * @author Peter Nerg
@@ -24,16 +29,30 @@ import javascalautils.ThrowableFunction0;
 public final class Factory<T> {
 	
 	private final ThrowableFunction0<T> instanceFactory;
+	private int size = 50;
+	private Option<Predicate<T>> validator = None();
 
 	private Factory(ThrowableFunction0<T> instanceFactory) {
 		this.instanceFactory = instanceFactory;
 	}
 	
 	public static <T> Factory<T> poolFor(ThrowableFunction0<T> instanceFactory){ 
+		requireNonNull(instanceFactory);
 		return new Factory<>(instanceFactory);
 	}
 	
-	public Pool<T> create() {
-		return new PoolImpl<>(instanceFactory);
+	public Factory<T> ofSize(int size) {
+		this.size = size;
+		return this;
 	}
+	
+	public Factory<T> withValidator(Predicate<T> validator) {
+		this.validator = Some(validator);
+		return this;
+	}
+
+	public Pool<T> create() {
+		return new PoolImpl<>(instanceFactory, size, validator);
+	}
+	
 }
