@@ -20,31 +20,19 @@ import org.junit.Test;
 import simplepool.Constants.PoolMode;
 
 /**
- * Test the class {@link PoolQueue}
+ * Base test cases for the {@link PoolQueue}
  * @author Peter Nerg
  */
-public class TestPoolQueue extends BaseAssert {
-	
-	@Test
-	public void testPollWithFifo() {
-		PoolQueue<String> poolQueue = new PoolQueue<>(2, PoolMode.FIFO);
-		poolQueue.offer("First");
-		poolQueue.offer("Second");
-		
-		assertEquals("First", poolQueue.poll().get());
-		assertEquals("Second", poolQueue.poll().get());
-		assertFalse(poolQueue.poll().isDefined());
-	}
+abstract class AbstractPoolQueueTest extends BaseAssert {
 
-	@Test
-	public void testPollWithLifo() {
-		PoolQueue<String> poolQueue = new PoolQueue<>(2, PoolMode.LIFO);
-		poolQueue.offer("First");
-		poolQueue.offer("Second");
-		
-		assertEquals("Second", poolQueue.poll().get());
-		assertEquals("First", poolQueue.poll().get());
-		assertFalse(poolQueue.poll().isDefined());
+	final PoolQueue<String> poolQueue;
+	
+	AbstractPoolQueueTest(PoolMode poolMode) {
+		poolQueue = new PoolQueue<>(2, poolMode);
 	}
 	
+	@Test
+	public void poll_emptyQueue() {
+		assertFalse(poolQueue.poll().isDefined());
+	}
 }
