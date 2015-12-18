@@ -31,8 +31,8 @@ public class TestPoolQueue extends BaseAssert {
 		poolQueue.offer(new PooledInstance<>("First"));
 		poolQueue.offer(new PooledInstance<>("Second"));
 		
-		assertEquals("First", poolQueue.poll().get().instance());
-		assertEquals("Second", poolQueue.poll().get().instance());
+		assertEquals("First", poolQueue.poll().get());
+		assertEquals("Second", poolQueue.poll().get());
 		assertFalse(poolQueue.poll().isDefined());
 	}
 
@@ -42,8 +42,8 @@ public class TestPoolQueue extends BaseAssert {
 		poolQueue.offer(new PooledInstance<>("First"));
 		poolQueue.offer(new PooledInstance<>("Second"));
 		
-		assertEquals("Second", poolQueue.poll().get().instance());
-		assertEquals("First", poolQueue.poll().get().instance());
+		assertEquals("Second", poolQueue.poll().get());
+		assertEquals("First", poolQueue.poll().get());
 		assertFalse(poolQueue.poll().isDefined());
 	}
 	

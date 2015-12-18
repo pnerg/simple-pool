@@ -15,6 +15,7 @@
  */
 package simplepool;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import javascalautils.Try;
@@ -36,7 +37,7 @@ public interface Pool<T> {
 	 * @return The object instance
 	 */
 	default Try<T> getInstance() {
-		return getInstance(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+		return getInstance(Duration.ofMillis(Long.MAX_VALUE));
 	}
 
 	/**
@@ -50,6 +51,6 @@ public interface Pool<T> {
 	 *            The unit of the waitTime
 	 * @return The object instance
 	 */
-	Try<T> getInstance(long waitTime, TimeUnit timeUnit);
+	Try<T> getInstance(Duration maxWaitTime);
 
 }

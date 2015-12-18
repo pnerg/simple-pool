@@ -22,13 +22,14 @@ import javascalautils.Option;
 import simplepool.Constants.PoolMode;
 
 import static javascalautils.OptionCompanion.Option;
+
 /**
  * @author Peter Nerg
  */
-final class PoolQueue<V> {
+final class PoolQueue<T> {
 
 	/** The actual queue implementation. */
-	private final Deque<PooledInstance<V>> queue;
+	private final Deque<PooledInstance<T>> queue;
 
 	/**
 	 * Determines if the queue executes in FIFO (queue) or LIFO (stack) mode.
@@ -40,25 +41,40 @@ final class PoolQueue<V> {
 		queue = new LinkedBlockingDeque<>(poolSize);
 	}
 
-//	int size() {
-//		return queue.size();
-//	}
-//
-//	/**
-//	 * Clears the queue.
-//	 */
-//	void clear() {
-//		queue.clear();
-//	}
-//
+	// int size() {
+	// return queue.size();
+	// }
+	//
+	// /**
+	// * Clears the queue.
+	// */
+	// void clear() {
+	// queue.clear();
+	// }
+	//
 	/**
 	 * Get the first free instance from the queue. <br>
 	 * The instance is always drawn from the front of the queue.
 	 * 
 	 * @return
 	 */
-	Option<PooledInstance<V>> poll() {
-		return Option(queue.poll());
+	Option<T> poll() {
+		boolean foundInstance = false;
+		PooledInstance<T> wrapper;
+		// keep looping until either a non destroyed object is found or the end
+		// of the queue is reached
+		T instance = null;
+		while (!foundInstance && (wrapper = queue.poll()) != null) {
+			// attempt to mark the instance as used
+			// if we fail to do so it means that the idle reaper has destroyed
+			// it, thus we skip and take the next
+			if (wrapper.markAsUsedOrDestroyed()) {
+				instance = wrapper.instance();
+				foundInstance = true;
+			}
+		}
+
+		return Option(instance);
 	}
 
 	/**
@@ -68,12 +84,12 @@ final class PoolQueue<V> {
 	 * 
 	 * @return
 	 */
-	boolean offer(PooledInstance<V> instance) {
+	boolean offer(PooledInstance<T> instance) {
 		return poolMode == PoolMode.FIFO ? queue.offerLast(instance) : queue.offerFirst(instance);
 	}
 
-//	boolean remove(PooledInstance<V> instance) {
-//		return queue.remove(instance);
-//	}
+	// boolean remove(PooledInstance<V> instance) {
+	// return queue.remove(instance);
+	// }
 
 }
