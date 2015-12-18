@@ -28,8 +28,8 @@ public class TestPoolQueue extends BaseAssert {
 	@Test
 	public void testPollWithFifo() {
 		PoolQueue<String> poolQueue = new PoolQueue<>(2, PoolMode.FIFO);
-		poolQueue.offer(new PooledInstance<>("First"));
-		poolQueue.offer(new PooledInstance<>("Second"));
+		poolQueue.offer("First");
+		poolQueue.offer("Second");
 		
 		assertEquals("First", poolQueue.poll().get());
 		assertEquals("Second", poolQueue.poll().get());
@@ -39,8 +39,8 @@ public class TestPoolQueue extends BaseAssert {
 	@Test
 	public void testPollWithLifo() {
 		PoolQueue<String> poolQueue = new PoolQueue<>(2, PoolMode.LIFO);
-		poolQueue.offer(new PooledInstance<>("First"));
-		poolQueue.offer(new PooledInstance<>("Second"));
+		poolQueue.offer("First");
+		poolQueue.offer("Second");
 		
 		assertEquals("Second", poolQueue.poll().get());
 		assertEquals("First", poolQueue.poll().get());

@@ -52,7 +52,7 @@ final class PoolImpl<T> implements Pool<T> {
 	 * All depending on the load and if instances have timed-out and have been
 	 * destroyed
 	 */
-	private final PoolQueue pool;
+	private final PoolQueue<T> pool;
 
 	/**
 	 * Acts as gate keeper only allowing a maximum number of concurrent
@@ -82,38 +82,23 @@ final class PoolImpl<T> implements Pool<T> {
 			if (!permits.tryAcquire(maxWaitTime.toMillis(), TimeUnit.MILLISECONDS)) {
 				throw new TimeoutException("Timeout waiting for idle object in the pool");
 			}
-
-			// OK so now we got a semaphore, i.e. we got a go ahead to take a
-			// pooled
-			// instance
-			// But if the queue/pool is empty it means that there is a missing
-			// instance in the pool
-			// In this case we simply attempt to create a new instance.
-//			T instance = null;
-
 			
-//			 // if no instance was found create one
-//			 // this is the case when the pool has not yet been maxed out
-//			 if (instance == null) {
-//			 logger.debug("No working objects and the pool [{}] has not reached limit, will create new object.", factory);
-//			 try {
-//			 instance = instanceFactory.apply();
-//			 } catch (Exception e) {
-//			 // for some reason we failed to create an instance
-//			 // release the semaphore that was previously acquired otherwise
-//			 // me might drain all semaphores
-//			 String message = "Failed to create instance for [" + factory +"]";
-//			 logger.warn(message, e);
-//			 permits.release();
-//			 throw new ObjectPoolException(message, e);
-//			 }
-//			 }
-
-			// invoke the life-cycle event initialize()
-			// factory.initialize(instance);
-
-			 return null;
+			return pool.poll().getOrElse(() -> createInstance());
 		});
+	}
+
+	private T createInstance() {
+		try {
+			return instanceFactory.apply();
+		} catch (Throwable ex) {
+			// for some reason we failed to create an instance
+			// release the semaphore that was previously acquired otherwise
+			// me might drain all semaphores
+			String message = "Failed to create instance";
+			logger.warn(message, ex);
+			permits.release();
+			throw new PoolException(message, ex);
+		}
 	}
 
 }

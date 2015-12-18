@@ -41,22 +41,11 @@ final class PoolQueue<T> {
 		queue = new LinkedBlockingDeque<>(poolSize);
 	}
 
-	// int size() {
-	// return queue.size();
-	// }
-	//
-	// /**
-	// * Clears the queue.
-	// */
-	// void clear() {
-	// queue.clear();
-	// }
-	//
 	/**
 	 * Get the first free instance from the queue. <br>
 	 * The instance is always drawn from the front of the queue.
 	 * 
-	 * @return
+	 * @return The instance, or None if no valid instance was found
 	 */
 	Option<T> poll() {
 		boolean foundInstance = false;
@@ -84,12 +73,9 @@ final class PoolQueue<T> {
 	 * 
 	 * @return
 	 */
-	boolean offer(PooledInstance<T> instance) {
-		return poolMode == PoolMode.FIFO ? queue.offerLast(instance) : queue.offerFirst(instance);
+	boolean offer(T instance) {
+		PooledInstance<T> pooledInstance = new PooledInstance<>(instance);
+		return poolMode == PoolMode.FIFO ? queue.offerLast(pooledInstance) : queue.offerFirst(pooledInstance);
 	}
-
-	// boolean remove(PooledInstance<V> instance) {
-	// return queue.remove(instance);
-	// }
 
 }

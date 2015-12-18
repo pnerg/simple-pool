@@ -23,9 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Peter Nerg
  * @param V The type of the value kept by this instance
  */
-final class PooledInstance<V> {
+final class PooledInstance<T> {
     /** The pooled object instance. */
-    private final V instance;
+    private final T instance;
 
     private final AtomicBoolean inUse = new AtomicBoolean(false);
     private final long lastUsed = System.currentTimeMillis();
@@ -34,7 +34,7 @@ final class PooledInstance<V> {
      * Creates a wrapper instance
      * @param object The object instance to wrap
      */
-    PooledInstance(V object) {
+    PooledInstance(T object) {
         this.instance = object;
     }
 
@@ -61,7 +61,7 @@ final class PooledInstance<V> {
      * Get the wrapped object instance
      * @return The object instance
      */
-    V instance() {
+    T instance() {
     	return instance;
     }
     
