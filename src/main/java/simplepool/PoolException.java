@@ -20,7 +20,7 @@ package simplepool;
  * E.g. any issue creating an object to the pool will end up in one of these.
  * @author Peter Nerg
  */
-public class PoolException extends RuntimeException {
+public final class PoolException extends RuntimeException {
 	private static final long serialVersionUID = 5382005746070605737L;
 	
 	/**
