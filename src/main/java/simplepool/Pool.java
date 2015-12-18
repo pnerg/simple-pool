@@ -45,10 +45,8 @@ public interface Pool<T> {
 	 * If no free objects this method waits (for the provided time) until an
 	 * object is returned.
 	 * 
-	 * @param waitTime
+	 * @param maxWaitTime
 	 *            The time to wait for a free object
-	 * @param timeUnit
-	 *            The unit of the waitTime
 	 * @return The object instance
 	 */
 	Try<T> getInstance(Duration maxWaitTime);
