@@ -15,27 +15,23 @@
  */
 package simplepool;
 
+import static javascalautils.TryCompanion.Try;
+
 import java.time.Duration;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javascalautils.Failure;
 import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import simplepool.Constants.PoolMode;
-import static javascalautils.TryCompanion.Try;
 
 /**
  * @author Peter Nerg
  */
 final class PoolImpl<T> implements Pool<T> {
-	private static final Logger logger = LoggerFactory.getLogger(PoolImpl.class);
 	private final ThrowableFunction0<T> instanceFactory;
 	private final int maxSize;
 	private final Option<Predicate<T>> validator;
@@ -94,10 +90,8 @@ final class PoolImpl<T> implements Pool<T> {
 			// for some reason we failed to create an instance
 			// release the semaphore that was previously acquired otherwise
 			// me might drain all semaphores
-			String message = "Failed to create instance";
-			logger.warn(message, ex);
 			permits.release();
-			throw new PoolException(message, ex);
+			throw new PoolException("Failed to create instance", ex);
 		}
 	}
 
