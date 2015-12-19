@@ -49,5 +49,11 @@ public interface Pool<T> {
 	 * @return The object instance
 	 */
 	Try<T> getInstance(Duration maxWaitTime);
-
+	
+	/**
+	 * Returns a borrowed instance to the pool. <br>
+	 * Should the pool be full the instance will be discarded and destroyed.
+	 * @param instance The instance to return
+	 */
+	void returnInstance(T instance);
 }

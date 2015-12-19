@@ -33,6 +33,10 @@ public class TestPool extends BaseAssert {
 		public Try<String> getInstance(Duration maxWaitTime) {
 			return Success("Whatever");
 		}
+
+		@Override
+		public void returnInstance(String instance) {
+		}
 	};
 	
 	@Test

@@ -21,9 +21,9 @@ import java.time.Duration;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import simplepool.Constants.PoolMode;
@@ -33,8 +33,8 @@ import simplepool.Constants.PoolMode;
  */
 final class PoolImpl<T> implements Pool<T> {
 	private final ThrowableFunction0<T> instanceFactory;
-	private final Option<Predicate<T>> validator;
-
+	private final Predicate<T> validator;
+	private final Consumer<T> destructor;
 	// /** Used to schedule and execute this idle object reaper. */
 	// private final ScheduledExecutorService scheduledExecutorService =
 	// Executors.newScheduledThreadPool(1, new
@@ -55,9 +55,10 @@ final class PoolImpl<T> implements Pool<T> {
 	 */
 	private final Semaphore permits;
 
-	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Option<Predicate<T>> validator, PoolMode poolMode) {
+	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode) {
 		this.instanceFactory = instanceFactory;
 		this.validator = validator;
+		this.destructor = destructor;
 		this.permits = new Semaphore(maxSize);
 		this.pool = new PoolQueue<>(maxSize, poolMode); 
 	}
@@ -79,6 +80,46 @@ final class PoolImpl<T> implements Pool<T> {
 		});
 	}
 
+	/* (non-Javadoc)
+	 * @see simplepool.Pool#returnInstance(java.lang.Object)
+	 */
+	@Override
+	public void returnInstance(T instance) {
+		//null instances are ignored
+        if (instance == null) {
+            return;
+        }
+
+        if (validator.test(instance)) {
+			// ok
+		}
+        else {
+        	destructor.accept(instance);
+        }
+
+        
+
+//        try {
+//            // invoke the life-cycle event cleanup()
+//            factory.cleanup(object);
+//
+//            // destroy the object if:
+//            // 1) the pool has been destroyed
+//            // 2) it fails validation
+//            // 3) if the queue rejects the object (queue is full)
+//            if (destroyed.get() || !factory.isValid(object) || !pool.offer(new PooledInstanceWrapper(object))) {
+//                destroy(object);
+//            }
+//        } catch (Exception e) {
+//            logger.warn("Failed to execute [cleanup] on instance of [" + object.getClass().getName() + "] for [" + factory + "]", e);
+//        } finally {
+//            // last but not least, release one permit
+//            // this is done regardless if the object was destroyed or not
+//            // we would otherwise sooner or later run out of permits
+//            permits.release();
+//        }
+	}
+	
 	private T createInstance() {
 		try {
 			return instanceFactory.apply();
