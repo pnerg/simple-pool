@@ -18,9 +18,12 @@ package simplepool;
 import static javascalautils.Option.None;
 import static javascalautils.OptionCompanion.Some;
 import static javascalautils.Validator.requireNonNull;
+
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javascalautils.Option;
+import javascalautils.Some;
 import javascalautils.ThrowableFunction0;
 import simplepool.Constants.PoolMode;
 
@@ -37,6 +40,7 @@ public final class Factory<T> {
 	private int size = 50;
 	private PoolMode poolMode = PoolMode.FIFO; //TODO make this configurable
 	private Option<Predicate<T>> validator = None();
+	private Option<Consumer<T>> destructor = None();
 	
 	private Factory(ThrowableFunction0<T> instanceFactory) {
 		this.instanceFactory = instanceFactory;
@@ -77,6 +81,23 @@ public final class Factory<T> {
 		return this;
 	}
 
+	/**
+	 * Provides a destructor function to the pool (Optional). <br>
+	 * The destructor is used by the pool when an instance is discarded and destroyed from the pool. <br>
+	 * Typical scenarios are:
+	 * <ul>
+	 * <li>An instance fails {@link #withValidator(Predicate) validation} when returning it to the pool</li>
+	 * <li>The instance has passed its idle time in the pool and is therefore evicted and destroyed.</li>
+	 * </ul>
+	 * 
+	 * @param destructor The destructor function
+	 * @return The pool factory
+	 */
+	public Factory<T> withDestructor(Consumer<T> destructor) {
+		this.destructor  = Some(destructor); 
+		return this;
+	}
+	
 	/**
 	 * Creates the pool instance. <br>
 	 * Final operation once the all needed properties have been set on the factory.

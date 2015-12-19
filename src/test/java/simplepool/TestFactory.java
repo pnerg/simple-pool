@@ -38,8 +38,14 @@ public class TestFactory extends BaseAssert {
 	}
 
 	@Test
-	public void create_WithValidatorSize() {
+	public void create_WithValidator() {
 		Pool<PoolableObject> pool = factory.withValidator(po -> true).create();
+		assertNotNull(pool);
+	}
+
+	@Test
+	public void create_WithDestructor() {
+		Pool<PoolableObject> pool = factory.withDestructor(po -> {}).create();
 		assertNotNull(pool);
 	}
 }
