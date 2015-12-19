@@ -17,6 +17,7 @@ package simplepool;
 
 import org.junit.Test;
 
+import javascalautils.Try;
 import simplepool.Constants.PoolMode;
 /**
  * Test the class {@link PoolImpl}
@@ -26,6 +27,13 @@ public class TestPoolImpl extends BaseAssert {
 
 	private final PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> new PoolableObject(), 2, po -> true, po -> {}, PoolMode.FIFO);
 	
+	
+	@Test
+	public void getInstance() throws Throwable {
+		Try<PoolableObject> instance = pool.getInstance();
+		assertTrue(instance.isSuccess());
+		assertTrue(instance.get() instanceof PoolableObject);
+	}
 			
 	@Test
 	public void return_nullInstance() {
