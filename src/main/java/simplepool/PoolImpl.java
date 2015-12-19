@@ -33,7 +33,6 @@ import simplepool.Constants.PoolMode;
  */
 final class PoolImpl<T> implements Pool<T> {
 	private final ThrowableFunction0<T> instanceFactory;
-	private final int maxSize;
 	private final Option<Predicate<T>> validator;
 
 	// /** Used to schedule and execute this idle object reaper. */
@@ -58,7 +57,6 @@ final class PoolImpl<T> implements Pool<T> {
 
 	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Option<Predicate<T>> validator, PoolMode poolMode) {
 		this.instanceFactory = instanceFactory;
-		this.maxSize = maxSize;
 		this.validator = validator;
 		this.permits = new Semaphore(maxSize);
 		this.pool = new PoolQueue<>(maxSize, poolMode); 
