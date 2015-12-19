@@ -26,9 +26,20 @@ public class TestFactory extends BaseAssert {
 	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject());
 	
 	@Test
-	public void createWithOnlyFactory() {
+	public void create_WithOnlyFactory() {
 		Pool<PoolableObject> pool = factory.create();
 		assertNotNull(pool);
 	}
 	
+	@Test
+	public void create_WithSpecifiedSize() {
+		Pool<PoolableObject> pool = factory.ofSize(666).create();
+		assertNotNull(pool);
+	}
+
+	@Test
+	public void create_WithValidatorSize() {
+		Pool<PoolableObject> pool = factory.withValidator(po -> true).create();
+		assertNotNull(pool);
+	}
 }
