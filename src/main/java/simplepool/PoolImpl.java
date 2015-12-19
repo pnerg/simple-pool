@@ -56,14 +56,12 @@ final class PoolImpl<T> implements Pool<T> {
 	 */
 	private final Semaphore permits;
 
-	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Option<Predicate<T>> validator) {
+	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Option<Predicate<T>> validator, PoolMode poolMode) {
 		this.instanceFactory = instanceFactory;
 		this.maxSize = maxSize;
 		this.validator = validator;
 		this.permits = new Semaphore(maxSize);
-		this.pool = new PoolQueue<>(maxSize, PoolMode.FIFO); // TODO make
-																// FIFO/LIFO
-																// configurable
+		this.pool = new PoolQueue<>(maxSize, poolMode); 
 	}
 
 	/*

@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 
 import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
+import simplepool.Constants.PoolMode;
 
 /**
  * Factory for creating pool instances. <br>
@@ -34,8 +35,9 @@ public final class Factory<T> {
 	
 	private final ThrowableFunction0<T> instanceFactory;
 	private int size = 50;
+	private PoolMode poolMode = PoolMode.FIFO; //TODO make this configurable
 	private Option<Predicate<T>> validator = None();
-
+	
 	private Factory(ThrowableFunction0<T> instanceFactory) {
 		this.instanceFactory = instanceFactory;
 	}
@@ -81,7 +83,7 @@ public final class Factory<T> {
 	 * @return The pool
 	 */
 	public Pool<T> create() {
-		return new PoolImpl<>(instanceFactory, size, validator);
+		return new PoolImpl<>(instanceFactory, size, validator, poolMode);
 	}
 	
 }
