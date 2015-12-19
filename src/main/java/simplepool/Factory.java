@@ -22,9 +22,13 @@ import java.util.function.Predicate;
 
 import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
+
 /**
- * Factory for creating pool instances.
+ * Factory for creating pool instances. <br>
+ * The factory works according to a builder pattern where one starts by creating the factory ({@link #poolFor(ThrowableFunction0) poolFor}) and finishes by invoking {@link #create()}. <br>
+ * In between those invocations one may add optional behavior, such as the {@link #ofSize(int) size} of the pool.
  * @author Peter Nerg
+ * @param <T> The type the pool shall produce
  */
 public final class Factory<T> {
 	
@@ -36,21 +40,46 @@ public final class Factory<T> {
 		this.instanceFactory = instanceFactory;
 	}
 	
+	/**
+	 * Creates the pool factory. <br>
+	 * This is the starting point for building a pool. <br>
+	 * The <i>instanceFactory</i> is mandatory as it is the function the pool will use when it needs to create instances.
+	 * @param instanceFactory The function that shall produce the instances for the pool.
+	 * @return The pool factory
+	 */
 	public static <T> Factory<T> poolFor(ThrowableFunction0<T> instanceFactory){ 
 		requireNonNull(instanceFactory);
 		return new Factory<>(instanceFactory);
 	}
 	
+	/**
+	 * Specifies the maximum size of the pool (optional). <br>
+	 * If not specified the default size is <tt>50</tt>
+	 * @param size The maximum size of the pool
+	 * @return The pool factory
+	 */
 	public Factory<T> ofSize(int size) {
 		this.size = size;
 		return this;
 	}
 	
+	/**
+	 * Provides a validator function to the pool (Optional). <br>
+	 * The validator is used every time an instance is returned to the pool. <br>
+	 * If the instance fails the validation it will be destroyed as opposed to returned to the pool.
+	 * @param validator The validator function
+	 * @return The pool factory
+	 */
 	public Factory<T> withValidator(Predicate<T> validator) {
 		this.validator = Some(validator);
 		return this;
 	}
 
+	/**
+	 * Creates the pool instance. <br>
+	 * Final operation once the all needed properties have been set on the factory.
+	 * @return The pool
+	 */
 	public Pool<T> create() {
 		return new PoolImpl<>(instanceFactory, size, validator);
 	}
