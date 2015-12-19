@@ -15,6 +15,8 @@
  */
 package simplepool;
 
+import java.time.Duration;
+
 import org.junit.Test;
 
 import javascalautils.Try;
@@ -35,6 +37,13 @@ public class TestPoolImpl extends BaseAssert {
 		assertTrue(instance.get() instanceof PoolableObject);
 	}
 			
+	@Test
+	public void getInstance_exhausePool() {
+		assertTrue(pool.getInstance().isSuccess());
+		assertTrue(pool.getInstance().isSuccess());
+		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess()); //should fail as pool size is only 2
+	}
+	
 	@Test
 	public void return_nullInstance() {
 		pool.returnInstance(null);
