@@ -16,7 +16,7 @@
 package simplepool;
 
 import static javascalautils.Option.None;
-import static javascalautils.OptionCompanion.Some;
+import static javascalautils.OptionCompanion.Option;
 import static javascalautils.Validator.requireNonNull;
 
 import java.util.function.Consumer;
@@ -76,7 +76,7 @@ public final class Factory<T> {
 	 * @return The pool factory
 	 */
 	public Factory<T> withValidator(Predicate<T> validator) {
-		this.validator = Some(validator);
+		this.validator = Option(validator);
 		return this;
 	}
 
@@ -93,7 +93,7 @@ public final class Factory<T> {
 	 * @return The pool factory
 	 */
 	public Factory<T> withDestructor(Consumer<T> destructor) {
-		this.destructor  = Some(destructor); 
+		this.destructor  = Option(destructor); 
 		return this;
 	}
 	
