@@ -37,7 +37,7 @@ public final class Factory<T> {
 	
 	private final ThrowableFunction0<T> instanceFactory;
 	private int size = 50;
-	private PoolMode poolMode = PoolMode.FIFO; //TODO make this configurable
+	private PoolMode poolMode = PoolMode.FIFO;
 	private Option<Predicate<T>> validator = None();
 	private Option<Consumer<T>> destructor = None();
 	
@@ -94,6 +94,17 @@ public final class Factory<T> {
 	 */
 	public Factory<T> withDestructor(Consumer<T> destructor) {
 		this.destructor  = Option(destructor); 
+		return this;
+	}
+	
+	/**
+	 * Sets the mode for which the pool operates.
+	 * @param poolMode The pool mode
+	 * @return The pool factory
+	 * @see PoolMode
+	 */
+	public Factory<T> withPoolMode(PoolMode poolMode) {
+		this.poolMode = poolMode;
 		return this;
 	}
 	
