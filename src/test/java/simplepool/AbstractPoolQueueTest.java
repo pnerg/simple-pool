@@ -15,6 +15,8 @@
  */
 package simplepool;
 
+import java.time.Duration;
+
 import org.junit.Test;
 
 import simplepool.Constants.PoolMode;
@@ -32,15 +34,21 @@ public abstract class AbstractPoolQueueTest extends BaseAssert {
 	}
 	
 	@Test
-	public void offer_beyondCapacity() {
+	public void returnInstance_beyondCapacity() {
 		assertTrue(pool.returnInstance("one").isSuccess());
 		assertTrue(pool.returnInstance("two").isSuccess());
 		assertFalse(pool.returnInstance("three").isSuccess());
 	}
-	
 
 	@Test
-	public void poll_emptyQueue() throws Throwable {
+	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("Peter", pool.getInstance().get());
+	}
+	
+	@Test
+	public void getInstance_Timeout() {
+		assertTrue(pool.getInstance().isSuccess());
+		assertTrue(pool.getInstance().isSuccess());
+		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess());
 	}
 }
