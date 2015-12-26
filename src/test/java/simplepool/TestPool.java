@@ -22,6 +22,7 @@ import java.time.Duration;
 import org.junit.Test;
 
 import javascalautils.Try;
+import javascalautils.Unit;
 /**
  * Test the class {@link Pool}
  * @author Peter Nerg
@@ -35,7 +36,8 @@ public class TestPool extends BaseAssert {
 		}
 
 		@Override
-		public void returnInstance(String instance) {
+		public Try<Unit> returnInstance(String instance) {
+			return Try.apply(new Unit());
 		}
 	};
 	

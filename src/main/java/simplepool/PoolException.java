@@ -31,4 +31,8 @@ public final class PoolException extends RuntimeException {
 	 PoolException(String message, Throwable cause) {
 		 super(message, cause);
 	}
+
+	 PoolException(String message) {
+		 super(message);
+	}
 }

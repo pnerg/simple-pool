@@ -38,15 +38,21 @@ public class TestPoolImpl extends BaseAssert {
 	}
 			
 	@Test
-	public void getInstance_exhausePool() {
+	public void getInstance_exhaustPool() {
 		assertTrue(pool.getInstance().isSuccess());
 		assertTrue(pool.getInstance().isSuccess());
 		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess()); //should fail as pool size is only 2
+	}
+
+	@Test   
+	public void getInstance_failToCreateInstance() {
+		PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> {throw new Exception("Error, terror");}, 2, po -> true, po -> {}, PoolMode.FIFO);
+		Try<PoolableObject> instance = pool.getInstance();
+		assertFalse(instance.isSuccess());
 	}
 	
 	@Test
 	public void return_nullInstance() {
 		pool.returnInstance(null);
 	}
-			
 }

@@ -15,17 +15,25 @@
  */
 package simplepool;
 
+import static javascalautils.OptionCompanion.Option;
 import static javascalautils.TryCompanion.Try;
 
 import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
+import javascalautils.Unit;
+import javascalautils.Validator;
 import simplepool.Constants.PoolMode;
 
 /**
@@ -40,27 +48,30 @@ final class PoolImpl<T> implements Pool<T> {
 	// Executors.newScheduledThreadPool(1, new
 	// NamedSequenceThreadFactory("ObjectPool-Reaper"));
 
+	/** The actual queue implementation. */
+	private final Deque<PooledInstance<T>> queue = new ArrayDeque<>();
+
 	/**
-	 * Keeps references to object instances. <br>
-	 * The number of objects in the queue/pool can range between zero and max
-	 * instances. <br>
-	 * All depending on the load and if instances have timed-out and have been
-	 * destroyed
+	 * Determines if the queue executes in FIFO (queue) or LIFO (stack) mode.
 	 */
-	private final PoolQueue<T> pool;
+	private final PoolMode poolMode;
+
+	private final int poolSize;
 
 	/**
 	 * Acts as gate keeper only allowing a maximum number of concurrent
 	 * users/threads for this pool.
 	 */
 	private final Semaphore permits;
+	private final ReentrantLock lock = new ReentrantLock();
 
 	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode) {
 		this.instanceFactory = instanceFactory;
+		poolSize = maxSize;
 		this.validator = validator;
 		this.destructor = destructor;
+		this.poolMode = poolMode;
 		this.permits = new Semaphore(maxSize);
-		this.pool = new PoolQueue<>(maxSize, poolMode); 
 	}
 
 	/*
@@ -75,51 +86,56 @@ final class PoolImpl<T> implements Pool<T> {
 			if (!permits.tryAcquire(maxWaitTime.toMillis(), TimeUnit.MILLISECONDS)) {
 				throw new TimeoutException("Timeout waiting for idle object in the pool");
 			}
-			
-			return pool.poll().getOrElse(() -> createInstance());
+
+			return head().getOrElse(() -> createInstance());
 		});
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see simplepool.Pool#returnInstance(java.lang.Object)
 	 */
 	@Override
-	public void returnInstance(T instance) {
-		//null instances are ignored
-        if (instance == null) {
-            return;
-        }
+	public Try<Unit> returnInstance(T instance) {
+		return Try(() -> {
+			Validator.requireNonNull(instance);
 
-        if (validator.test(instance)) {
-			// ok
-		}
-        else {
-        	destructor.accept(instance);
-        }
+			PooledInstance<T> pooledInstance = new PooledInstance<>(instance);
 
-        
+			// first validate the instance
+			// if we fail validation the instance is destroyed and the pooled
+			// instance
+			// is marked as destroyed
+			boolean isValid = validator.test(instance);
+			if (!isValid) {
+				destroy(pooledInstance);
+			}
 
-//        try {
-//            // invoke the life-cycle event cleanup()
-//            factory.cleanup(object);
-//
-//            // destroy the object if:
-//            // 1) the pool has been destroyed
-//            // 2) it fails validation
-//            // 3) if the queue rejects the object (queue is full)
-//            if (destroyed.get() || !factory.isValid(object) || !pool.offer(new PooledInstanceWrapper(object))) {
-//                destroy(object);
-//            }
-//        } catch (Exception e) {
-//            logger.warn("Failed to execute [cleanup] on instance of [" + object.getClass().getName() + "] for [" + factory + "]", e);
-//        } finally {
-//            // last but not least, release one permit
-//            // this is done regardless if the object was destroyed or not
-//            // we would otherwise sooner or later run out of permits
-//            permits.release();
-//        }
+			lock.lock();
+			try {
+				if (queue.size() >= poolSize) {
+					throw new PoolException("Pool is full");
+				}
+
+				// only add the instance back to the pool if it was valid
+				if (isValid) {
+					if (poolMode == PoolMode.FIFO)
+						queue.addLast(pooledInstance);
+					else
+						queue.addFirst(pooledInstance);
+				}
+
+				// now release a permit to take a new item from the pool
+				permits.release();
+			} finally {
+				lock.unlock();
+			}
+
+			return new Unit();
+		});
 	}
-	
+
 	private T createInstance() {
 		try {
 			return instanceFactory.apply();
@@ -132,4 +148,39 @@ final class PoolImpl<T> implements Pool<T> {
 		}
 	}
 
+	private void destroy(PooledInstance<T> pooledInstance) {
+		pooledInstance.markAsUsedOrDestroyed();
+		destructor.accept(pooledInstance.instance());
+	}
+
+	/**
+	 * Get the first free instance from the queue. <br>
+	 * The instance is always drawn from the front of the queue.
+	 * 
+	 * @return The instance, or None if no valid instance was found
+	 */
+	Option<T> head() {
+		boolean foundInstance = false;
+		PooledInstance<T> wrapper;
+		// keep looping until either a non destroyed object is found or the
+		// end
+		// of the queue is reached
+		T instance = null;
+		lock.lock();
+		try {
+			while (!foundInstance && (wrapper = queue.poll()) != null) {
+				// attempt to mark the instance as used
+				// if we fail to do so it means that the idle reaper has
+				// destroyed
+				// it, thus we skip and take the next
+				if (wrapper.markAsUsedOrDestroyed()) {
+					instance = wrapper.instance();
+					foundInstance = true;
+				}
+			}
+			return Option(instance);
+		} finally {
+			lock.unlock();
+		}
+	}
 }

@@ -23,27 +23,19 @@ import simplepool.Constants.PoolMode;
  * Test the class {@link PoolQueue}
  * @author Peter Nerg
  */
-public class TestPoolQueueLIFO extends AbstractPoolQueueTest {
+public class TestPoolImplLIFO extends AbstractPoolQueueTest {
 
-	public TestPoolQueueLIFO() {
+	public TestPoolImplLIFO() {
 		super(PoolMode.LIFO);
 	}
 
 	@Test
-	public void poll_nonEmpty() {
-		poolQueue.offer("First");
-		poolQueue.offer("Second");
+	public void poll_nonEmpty() throws Throwable {
+		pool.returnInstance("First");
+		pool.returnInstance("Second");
 		
-		assertEquals("Second", poolQueue.poll().get());
-		assertEquals("First", poolQueue.poll().get());
-		assertFalse(poolQueue.poll().isDefined());
-	}
-	
-	@Test
-	public void offer_beyondCapacity() {
-		assertTrue(poolQueue.offer("one"));
-		assertTrue(poolQueue.offer("two"));
-		assertFalse(poolQueue.offer("three"));
+		assertEquals("Second", pool.getInstance().get());
+		assertEquals("First", pool.getInstance().get());
 	}
 	
 }

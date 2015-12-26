@@ -23,16 +23,24 @@ import simplepool.Constants.PoolMode;
  * Base test cases for the {@link PoolQueue}
  * @author Peter Nerg
  */
-abstract class AbstractPoolQueueTest extends BaseAssert {
+public abstract class AbstractPoolQueueTest extends BaseAssert {
 
-	final PoolQueue<String> poolQueue;
+	final PoolImpl<String> pool;
 	
 	AbstractPoolQueueTest(PoolMode poolMode) {
-		poolQueue = new PoolQueue<>(2, poolMode);
+		pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, poolMode);
 	}
 	
 	@Test
-	public void poll_emptyQueue() {
-		assertFalse(poolQueue.poll().isDefined());
+	public void offer_beyondCapacity() {
+		assertTrue(pool.returnInstance("one").isSuccess());
+		assertTrue(pool.returnInstance("two").isSuccess());
+		assertFalse(pool.returnInstance("three").isSuccess());
+	}
+	
+
+	@Test
+	public void poll_emptyQueue() throws Throwable {
+		assertEquals("Peter", pool.getInstance().get());
 	}
 }

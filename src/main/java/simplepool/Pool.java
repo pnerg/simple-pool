@@ -18,6 +18,7 @@ package simplepool;
 import java.time.Duration;
 
 import javascalautils.Try;
+import javascalautils.Unit;
 
 /**
  * Represents a pool of objects.
@@ -52,8 +53,9 @@ public interface Pool<T> {
 	
 	/**
 	 * Returns a borrowed instance to the pool. <br>
-	 * Should the pool be full the instance will be discarded and destroyed.
+	 * Should the pool be full and an attempt is made to return an instance the operation will result in a {@link javascalautils.Failure}.
 	 * @param instance The instance to return
+	 * @return The result of returning the instance
 	 */
-	void returnInstance(T instance);
+	Try<Unit> returnInstance(T instance);
 }
