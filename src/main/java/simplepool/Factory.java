@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javascalautils.Option;
-import javascalautils.Some;
 import javascalautils.ThrowableFunction0;
 import simplepool.Constants.PoolMode;
 
