@@ -25,6 +25,9 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
+import javascalautils.Failure;
+import javascalautils.Try;
+
 /**
  * Base test class.
  * 
@@ -171,4 +174,19 @@ public class BaseAssert extends Assert {
         assertEquals(expectedSize, collection.size());
     }
 
+    /**
+     * Asserts that the provided {@link Try} is a {@link Failure}
+     * @param t
+     */
+    public static void assertIsFailure(Try<?> t) {
+    	assertTrue("Expected the Try to be a failure", t.isFailure());
+    }
+    
+    /**
+     * Asserts that the provided {@link Try} is a {@link Success}
+     * @param t
+     */
+    public static void assertIsSuccess(Try<?> t) {
+    	assertTrue("Expected the Try to be a failure", t.isSuccess());
+    }
 }

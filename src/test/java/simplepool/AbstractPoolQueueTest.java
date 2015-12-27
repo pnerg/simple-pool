@@ -19,6 +19,7 @@ import java.time.Duration;
 
 import org.junit.Test;
 
+import javascalautils.Try;
 import simplepool.Constants.PoolMode;
 
 /**
@@ -35,30 +36,49 @@ public abstract class AbstractPoolQueueTest extends BaseAssert {
 		pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, poolMode);
 	}
 	
-	@Test
+	@Test(timeout=5000)
 	public void returnInstance_beyondCapacity() {
-		assertTrue(pool.returnInstance("one").isSuccess());
-		assertTrue(pool.returnInstance("two").isSuccess());
-		assertFalse(pool.returnInstance("three").isSuccess());
+		assertIsSuccess(pool.returnInstance("one"));
+		assertIsSuccess(pool.returnInstance("two"));
+		assertIsFailure(pool.returnInstance("three"));
 	}
 
-	@Test
+	@Test(timeout=5000)
 	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("Peter", pool.getInstance().get());
 	}
 	
-	@Test
+	@Test(timeout=5000)
 	public void getInstance_Timeout() {
-		assertTrue(pool.getInstance().isSuccess());
-		assertTrue(pool.getInstance().isSuccess());
-		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess());
+		assertIsSuccess(pool.getInstance());
+		assertIsSuccess(pool.getInstance());
+		assertIsFailure(pool.getInstance(Duration.ofMillis(5)));
 	}
 	
-	@Test
+	@Test(timeout=5000)
+	public void returnInstance_nullObject() {
+		assertIsFailure(pool.returnInstance(null));
+	}
+	
+	@Test(timeout=5000)
+	public void getInstance_exhaustPool() {
+		assertTrue(pool.getInstance().isSuccess());
+		assertTrue(pool.getInstance().isSuccess());
+		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess()); //should fail as pool size is only 2
+	}
+
+	@Test(timeout=5000)
+	public void getInstance_failToCreateInstance() {
+		PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> {throw new Exception("Error, terror");}, 2, po -> true, po -> {}, PoolMode.FIFO);
+		Try<PoolableObject> instance = pool.getInstance();
+		assertFalse(instance.isSuccess());
+	}
+	
+	@Test(timeout=5000)
 	public void returnInstance_objectFailsValidation() {
 		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), poolMode);
 		PoolableObject po = new PoolableObject(false);
-		assertTrue(p.returnInstance(po).isSuccess());
+		assertIsSuccess(p.returnInstance(po));
 		assertTrue(po.isDestroyed());
 	}
 }

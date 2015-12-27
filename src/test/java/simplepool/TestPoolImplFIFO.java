@@ -29,7 +29,7 @@ public class TestPoolImplFIFO extends AbstractPoolQueueTest {
 		super(PoolMode.FIFO);
 	}
 
-	@Test
+	@Test(timeout=5000)
 	public void poll_nonEmpty() throws Throwable {
 		pool.returnInstance("First");
 		pool.returnInstance("Second");
