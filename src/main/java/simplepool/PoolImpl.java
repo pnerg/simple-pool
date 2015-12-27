@@ -15,9 +15,11 @@
  */
 package simplepool;
 
+import static javascalautils.OptionCompanion.None;
 import static javascalautils.OptionCompanion.Option;
 import static javascalautils.TryCompanion.Try;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -36,6 +38,8 @@ import javascalautils.Validator;
 import simplepool.Constants.PoolMode;
 
 /**
+ * The pool implementation.
+ * 
  * @author Peter Nerg
  */
 final class PoolImpl<T> implements Pool<T> {
@@ -58,8 +62,7 @@ final class PoolImpl<T> implements Pool<T> {
 	private final int poolSize;
 
 	/**
-	 * Acts as gate keeper only allowing a maximum number of concurrent
-	 * users/threads for this pool.
+	 * Acts as gate keeper only allowing a maximum number of concurrent users/threads for this pool.
 	 */
 	private final Semaphore permits;
 	private final ReentrantLock lock = new ReentrantLock();
@@ -104,15 +107,13 @@ final class PoolImpl<T> implements Pool<T> {
 
 			// first validate the instance
 			// if we fail validation the instance is destroyed and the pooled
-			// instance
-			// is marked as destroyed
+			// instance is marked as destroyed
 			boolean isValid = validator.test(instance);
 			if (!isValid) {
 				destroy(pooledInstance);
 			}
 
-			lock.lock();
-			try {
+			try(AutoReleaseLock l = new AutoReleaseLock()) {
 				if (queue.size() >= poolSize) {
 					throw new PoolException("Pool is full");
 				}
@@ -127,10 +128,8 @@ final class PoolImpl<T> implements Pool<T> {
 
 				// now release a permit to take a new item from the pool
 				permits.release();
-			} finally {
-				lock.unlock();
 			}
-
+			
 			return new Unit();
 		});
 	}
@@ -148,8 +147,9 @@ final class PoolImpl<T> implements Pool<T> {
 	}
 
 	private void destroy(PooledInstance<T> pooledInstance) {
-		pooledInstance.markAsUsedOrDestroyed();
-		destructor.accept(pooledInstance.instance());
+		if (pooledInstance.markAsUsedOrDestroyed()) {
+			destructor.accept(pooledInstance.instance());
+		}
 	}
 
 	/**
@@ -158,28 +158,41 @@ final class PoolImpl<T> implements Pool<T> {
 	 * 
 	 * @return The instance, or None if no valid instance was found
 	 */
-	Option<T> head() {
-		boolean foundInstance = false;
-		PooledInstance<T> wrapper;
-		// keep looping until either a non destroyed object is found or the
-		// end
-		// of the queue is reached
-		T instance = null;
-		lock.lock();
-		try {
-			while (!foundInstance && (wrapper = queue.poll()) != null) {
-				// attempt to mark the instance as used
-				// if we fail to do so it means that the idle reaper has
-				// destroyed
-				// it, thus we skip and take the next
-				if (wrapper.markAsUsedOrDestroyed()) {
-					instance = wrapper.instance();
-					foundInstance = true;
-				}
-			}
-			return Option(instance);
-		} finally {
+	private Option<T> head() {
+		Option<PooledInstance<T>> head = None();
+		try(AutoReleaseLock l = new AutoReleaseLock()) {
+			// first take the head of the queue and validate it's defines, i.e. exists
+			// then attempt to mark the instance as used
+			// if we fail to do so it means that the idle reaper has
+			// destroyed it, thus we skip and take the next
+			// keep looping until either a valid object is found or the end of the queue is reached
+			do {
+				 head = Option(queue.poll());
+			} while(head.isDefined() && !head.map(pi -> pi.markAsUsedOrDestroyed()).getOrElse(() -> false));
+			
+			return head.map(pi -> pi.instance());
+		}
+		
+	}
+
+	/**
+	 * Nothing but a wrapper to get auto/take-release of the internal lock. <br>
+	 * It's to be able to write try-with-resources statements that automatically close this class and thus releasing the lock.
+	 * @author Peter Nerg
+	 */
+	private final class AutoReleaseLock implements Closeable {
+
+		private AutoReleaseLock() {
+			lock.lock();
+		}
+
+		/**
+		 * Releases the lock taken in the constructor.
+		 */
+		@Override
+		public void close()  {
 			lock.unlock();
 		}
+		
 	}
 }
