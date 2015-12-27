@@ -20,4 +20,29 @@ package simplepool;
  * @author Peter Nerg
  */
 final class PoolableObject {
+
+	private final boolean isValid;
+	private boolean isDestroyed = false;
+	
+	PoolableObject() {
+		this(true);
+	}
+	
+	PoolableObject(boolean isValid) {
+		this.isValid = isValid;
+	}
+
+	boolean isValid() {
+		return isValid;
+	}
+
+	
+	void destroy() {
+		isDestroyed = true;
+	}
+	
+	boolean isDestroyed() {
+		return isDestroyed;
+	}
+	
 }

@@ -28,8 +28,10 @@ import simplepool.Constants.PoolMode;
 public abstract class AbstractPoolQueueTest extends BaseAssert {
 
 	final PoolImpl<String> pool;
+	private final PoolMode poolMode;
 	
 	AbstractPoolQueueTest(PoolMode poolMode) {
+		this.poolMode = poolMode;
 		pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, poolMode);
 	}
 	
@@ -50,5 +52,13 @@ public abstract class AbstractPoolQueueTest extends BaseAssert {
 		assertTrue(pool.getInstance().isSuccess());
 		assertTrue(pool.getInstance().isSuccess());
 		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess());
+	}
+	
+	@Test
+	public void returnInstance_objectFailsValidation() {
+		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), poolMode);
+		PoolableObject po = new PoolableObject(false);
+		assertTrue(p.returnInstance(po).isSuccess());
+		assertTrue(po.isDestroyed());
 	}
 }
