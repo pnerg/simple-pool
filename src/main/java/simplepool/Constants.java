@@ -17,17 +17,23 @@ package simplepool;
 
 /**
  * Constants to be used by the library.
+ * 
  * @author Peter Nerg
+ * @since 1.0
  */
 public interface Constants {
 	/**
 	 * The modes for which the pool may operate.
+	 * 
+	 * @since 1.0
 	 */
 	enum PoolMode {
 		/**
 		 * First-In, First-Out.<br>
 		 * A traditional queue, objects added to the pool are placed last. <br>
 		 * This means that instances are rotated in the pool, all are equally used. <br>
+		 * 
+		 * @since 1.0
 		 */
 		FIFO,
 		/**
@@ -35,6 +41,8 @@ public interface Constants {
 		 * A traditional stack, objects added to the pool are placed first. <br>
 		 * Instances added back to the pool will be added first and thus be the most frequently used instances. <br>
 		 * This can mean that items "lower" down in the stack may become stale and get destroyed in case an idle time has been configured.
+		 * 
+		 * @since 1.0
 		 */
 		LIFO
 	}

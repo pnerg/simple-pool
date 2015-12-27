@@ -18,21 +18,26 @@ package simplepool;
 /**
  * Exception used in conjunction with the pool. <br>
  * E.g. any issue creating an object to the pool will end up in one of these.
+ * 
  * @author Peter Nerg
+ * @since 1.0
  */
 public final class PoolException extends RuntimeException {
 	private static final long serialVersionUID = 5382005746070605737L;
-	
+
 	/**
 	 * Creates the exception
-	 * @param message The message
-	 * @param cause The underlying cause
+	 * 
+	 * @param message
+	 *            The message
+	 * @param cause
+	 *            The underlying cause
 	 */
-	 PoolException(String message, Throwable cause) {
-		 super(message, cause);
+	PoolException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
-	 PoolException(String message) {
-		 super(message);
+	PoolException(String message) {
+		super(message);
 	}
 }

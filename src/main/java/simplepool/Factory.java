@@ -30,50 +30,62 @@ import simplepool.Constants.PoolMode;
  * Factory for creating pool instances. <br>
  * The factory works according to a builder pattern where one starts by creating the factory ({@link #poolFor(ThrowableFunction0) poolFor}) and finishes by invoking {@link #create()}. <br>
  * In between those invocations one may add optional behavior, such as the {@link #ofSize(int) size} of the pool.
+ * 
  * @author Peter Nerg
- * @param <T> The type the pool shall produce
+ * @param <T>
+ *            The type the pool shall produce
+ * @since 1.0
  */
 public final class Factory<T> {
-	
+
 	private final ThrowableFunction0<T> instanceFactory;
 	private int size = 50;
 	private PoolMode poolMode = PoolMode.FIFO;
 	private Option<Predicate<T>> validator = None();
 	private Option<Consumer<T>> destructor = None();
-	
+
 	private Factory(ThrowableFunction0<T> instanceFactory) {
 		this.instanceFactory = instanceFactory;
 	}
-	
+
 	/**
 	 * Creates the pool factory. <br>
 	 * This is the starting point for building a pool. <br>
 	 * The <i>instanceFactory</i> is mandatory as it is the function the pool will use when it needs to create instances.
-	 * @param instanceFactory The function that shall produce the instances for the pool.
+	 * 
+	 * @param instanceFactory
+	 *            The function that shall produce the instances for the pool.
 	 * @return The pool factory
+	 * @since 1.0
 	 */
-	public static <T> Factory<T> poolFor(ThrowableFunction0<T> instanceFactory){ 
+	public static <T> Factory<T> poolFor(ThrowableFunction0<T> instanceFactory) {
 		requireNonNull(instanceFactory);
 		return new Factory<>(instanceFactory);
 	}
-	
+
 	/**
 	 * Specifies the maximum size of the pool (optional). <br>
 	 * If not specified the default size is <tt>50</tt>
-	 * @param size The maximum size of the pool
+	 * 
+	 * @param size
+	 *            The maximum size of the pool
 	 * @return The pool factory
+	 * @since 1.0
 	 */
 	public Factory<T> ofSize(int size) {
 		this.size = size;
 		return this;
 	}
-	
+
 	/**
 	 * Provides a validator function to the pool (Optional). <br>
 	 * The validator is used every time an instance is returned to the pool. <br>
 	 * If the instance fails the validation it will be destroyed as opposed to returned to the pool.
-	 * @param validator The validator function
+	 * 
+	 * @param validator
+	 *            The validator function
 	 * @return The pool factory
+	 * @since 1.0
 	 */
 	public Factory<T> withValidator(Predicate<T> validator) {
 		this.validator = Option(validator);
@@ -89,35 +101,42 @@ public final class Factory<T> {
 	 * <li>The instance has passed its idle time in the pool and is therefore evicted and destroyed.</li>
 	 * </ul>
 	 * 
-	 * @param destructor The destructor function
+	 * @param destructor
+	 *            The destructor function
 	 * @return The pool factory
+	 * @since 1.0
 	 */
 	public Factory<T> withDestructor(Consumer<T> destructor) {
-		this.destructor  = Option(destructor); 
+		this.destructor = Option(destructor);
 		return this;
 	}
-	
+
 	/**
 	 * Sets the mode for which the pool operates.
-	 * @param poolMode The pool mode
+	 * 
+	 * @param poolMode
+	 *            The pool mode
 	 * @return The pool factory
 	 * @see PoolMode
+	 * @since 1.0
 	 */
 	public Factory<T> withPoolMode(PoolMode poolMode) {
 		this.poolMode = poolMode;
 		return this;
 	}
-	
+
 	/**
 	 * Creates the pool instance. <br>
 	 * Final operation once the all needed properties have been set on the factory.
+	 * 
 	 * @return The pool
+	 * @since 1.0
 	 */
 	public Pool<T> create() {
-		Predicate<T> v = validator.getOrElse(() -> t -> true); //default validator always states true
-		Consumer<T>  c = destructor.getOrElse(() -> t -> {}); //default destructor does nothing
+		Predicate<T> v = validator.getOrElse(() -> t -> true); // default validator always states true
+		Consumer<T> c = destructor.getOrElse(() -> t -> {}); // default destructor does nothing
 
 		return new PoolImpl<>(instanceFactory, size, v, c, poolMode);
 	}
-	
+
 }
