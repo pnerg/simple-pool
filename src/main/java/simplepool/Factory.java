@@ -53,6 +53,8 @@ public final class Factory<T> {
 	 * This is the starting point for building a pool. <br>
 	 * The <i>instanceFactory</i> is mandatory as it is the function the pool will use when it needs to create instances.
 	 * 
+	 * @param <T>
+	 *            The type the pool shall produce
 	 * @param instanceFactory
 	 *            The function that shall produce the instances for the pool.
 	 * @return The pool factory
@@ -134,7 +136,8 @@ public final class Factory<T> {
 	 */
 	public Pool<T> create() {
 		Predicate<T> v = validator.getOrElse(() -> t -> true); // default validator always states true
-		Consumer<T> c = destructor.getOrElse(() -> t -> {}); // default destructor does nothing
+		Consumer<T> c = destructor.getOrElse(() -> t -> {
+		}); // default destructor does nothing
 
 		return new PoolImpl<>(instanceFactory, size, v, c, poolMode);
 	}

@@ -29,7 +29,7 @@ public interface Constants {
 	 */
 	enum PoolMode {
 		/**
-		 * First-In, First-Out.<br>
+		 * First-In, First-Out. <br>
 		 * A traditional queue, objects added to the pool are placed last. <br>
 		 * This means that instances are rotated in the pool, all are equally used. <br>
 		 * 
