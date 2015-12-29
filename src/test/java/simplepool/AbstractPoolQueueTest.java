@@ -33,7 +33,7 @@ public abstract class AbstractPoolQueueTest extends BaseAssert {
 	
 	AbstractPoolQueueTest(PoolMode poolMode) {
 		this.poolMode = poolMode;
-		pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, poolMode);
+		pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, poolMode, Duration.ofDays(1));
 	}
 	
 	@Test(timeout=5000)
@@ -69,14 +69,14 @@ public abstract class AbstractPoolQueueTest extends BaseAssert {
 
 	@Test(timeout=5000)
 	public void getInstance_failToCreateInstance() {
-		PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> {throw new Exception("Error, terror");}, 2, po -> true, po -> {}, PoolMode.FIFO);
+		PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> {throw new Exception("Error, terror");}, 2, po -> true, po -> {}, PoolMode.FIFO, Duration.ofDays(1));
 		Try<PoolableObject> instance = pool.getInstance();
 		assertFalse(instance.isSuccess());
 	}
 	
 	@Test(timeout=5000)
 	public void returnInstance_objectFailsValidation() {
-		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), poolMode);
+		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), poolMode, Duration.ofDays(1));
 		PoolableObject po = new PoolableObject(false);
 		assertIsSuccess(p.returnInstance(po));
 		assertTrue(po.isDestroyed());

@@ -155,7 +155,7 @@ public final class Factory<T> {
 		Consumer<T> c = destructor.getOrElse(() -> t -> {
 		}); // default destructor does nothing
 
-		return new PoolImpl<>(instanceFactory, size, v, c, poolMode);
+		return new PoolImpl<>(instanceFactory, size, v, c, poolMode, idleTime);
 	}
 
 }

@@ -66,13 +66,15 @@ final class PoolImpl<T> implements Pool<T> {
 	 */
 	private final Semaphore permits;
 	private final ReentrantLock lock = new ReentrantLock();
+	private final Duration idleTimeout;
 
-	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode) {
+	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout) {
 		this.instanceFactory = instanceFactory;
 		poolSize = maxSize;
 		this.validator = validator;
 		this.destructor = destructor;
 		this.poolMode = poolMode;
+		this.idleTimeout = idleTimeout;
 		this.permits = new Semaphore(maxSize);
 	}
 
