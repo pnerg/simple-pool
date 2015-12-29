@@ -6,7 +6,7 @@
 	<groupId>org.dmonix.pool</groupId>
 	<artifactId>simple-pool</artifactId>
 	<name>Simple Pool</name>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<description>Implements a thread safe non-synchronized pool for arbitrary objects</description>
 	<url>https://github.com/pnerg/simple-pool</url>
