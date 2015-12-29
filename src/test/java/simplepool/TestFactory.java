@@ -15,6 +15,8 @@
  */
 package simplepool;
 
+import java.time.Duration;
+
 import org.junit.Test;
 
 import simplepool.Constants.PoolMode;
@@ -51,6 +53,12 @@ public class TestFactory extends BaseAssert {
 		assertNotNull(pool);
 	}
 	
+	@Test
+	public void create_withIdleTimeout() {
+		Pool<PoolableObject> pool = factory.withIdleTimeout(Duration.ofMillis(666)).create();
+		assertNotNull(pool);
+	}
+
 	@Test
 	public void create_withPoolMode() {
 		Pool<PoolableObject> pool = factory.withPoolMode(PoolMode.LIFO).create();

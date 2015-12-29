@@ -19,6 +19,7 @@ import static javascalautils.Option.None;
 import static javascalautils.OptionCompanion.Option;
 import static javascalautils.Validator.requireNonNull;
 
+import java.time.Duration;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -43,6 +44,7 @@ public final class Factory<T> {
 	private PoolMode poolMode = PoolMode.FIFO;
 	private Option<Predicate<T>> validator = None();
 	private Option<Consumer<T>> destructor = None();
+	private Duration idleTime = Duration.ofMillis(Long.MAX_VALUE);
 
 	private Factory(ThrowableFunction0<T> instanceFactory) {
 		this.instanceFactory = instanceFactory;
@@ -124,6 +126,20 @@ public final class Factory<T> {
 	 */
 	public Factory<T> withPoolMode(PoolMode poolMode) {
 		this.poolMode = poolMode;
+		return this;
+	}
+
+	/**
+	 * Set the duration for how long an instance may be unused in the pool before it is evicted and destroyed. <br>
+	 * Evicting an instance will automatically {@link #withDestructor(Consumer) destroy} it and release one resource from the pool.
+	 * 
+	 * @param timeout
+	 *            The timeout
+	 * @return The pool factory
+	 * @since 1.1
+	 */
+	public Factory<T> withIdleTimeout(Duration timeout) {
+		this.idleTime = timeout;
 		return this;
 	}
 
