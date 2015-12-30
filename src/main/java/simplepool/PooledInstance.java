@@ -30,12 +30,19 @@ final class PooledInstance<T> {
     private final AtomicBoolean inUse = new AtomicBoolean(false);
     private final long lastUsed = System.currentTimeMillis();
 
+    private PooledInstance<T> next;
+    
     /**
      * Creates a wrapper instance
      * @param object The object instance to wrap
      */
     PooledInstance(T object) {
         this.instance = object;
+    }
+
+    PooledInstance(T object, PooledInstance<T> next) {
+        this.instance = object;
+        this.next = next;
     }
 
     /**
@@ -65,4 +72,11 @@ final class PooledInstance<T> {
     	return instance;
     }
     
+	PooledInstance<T> next() {
+		return next;
+	}
+	
+	void next(PooledInstance<T> next) {
+		this.next = next;
+	}
 }

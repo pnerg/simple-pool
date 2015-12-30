@@ -163,7 +163,7 @@ final class PoolImpl<T> implements Pool<T> {
 	private Option<T> head() {
 		Option<PooledInstance<T>> head = None();
 		try(AutoReleaseLock l = new AutoReleaseLock()) {
-			// first take the head of the queue and validate it's defines, i.e. exists
+			// first take the head of the queue and validate it's defined, i.e. exists
 			// then attempt to mark the instance as used
 			// if we fail to do so it means that the idle reaper has
 			// destroyed it, thus we skip and take the next
@@ -177,6 +177,14 @@ final class PoolImpl<T> implements Pool<T> {
 		
 	}
 
+	private void evictIdleInstances() {
+		long time2Evict = System.currentTimeMillis()-idleTimeout.toMillis();
+		queue.stream().filter(pi -> pi.lastUsed() < time2Evict).forEach(pi -> {
+				destroy(pi);
+				//TODO drop the item from the queue
+		});
+	}
+	
 	/**
 	 * Nothing but a wrapper to get auto/take-release of the internal lock. <br>
 	 * It's to be able to write try-with-resources statements that automatically close this class and thus releasing the lock.
