@@ -26,6 +26,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 
 import javascalautils.Failure;
+import javascalautils.None;
+import javascalautils.Option;
+import javascalautils.Some;
 import javascalautils.Try;
 
 /**
@@ -179,7 +182,7 @@ public class BaseAssert extends Assert {
      * @param t
      */
     public static void assertIsFailure(Try<?> t) {
-    	assertTrue("Expected the Try to be a failure", t.isFailure());
+    	assertTrue("Expected the Try to be a Failure", t.isFailure());
     }
     
     /**
@@ -187,6 +190,22 @@ public class BaseAssert extends Assert {
      * @param t
      */
     public static void assertIsSuccess(Try<?> t) {
-    	assertTrue("Expected the Try to be a failure", t.isSuccess());
+    	assertTrue("Expected the Try to be a Success", t.isSuccess());
+    }
+    
+    /**
+     * Assert that the provided {@link Option} is a {@link None}
+     * @param o
+     */
+    public static void assertIsNone(Option<?> o) {
+    	assertTrue("Expected the Option to be None", o.isEmpty());
+    }
+
+    /**
+     * Assert that the provided {@link Option} is a {@link Some}
+     * @param o
+     */
+    public static void assertIsSome(Option<?> o) {
+    	assertTrue("Expected the Option ["+o+"] to be Some", o.isDefined());
     }
 }
