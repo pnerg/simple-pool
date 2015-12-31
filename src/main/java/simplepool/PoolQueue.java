@@ -20,43 +20,32 @@ import static javascalautils.OptionCompanion.Option;
 import javascalautils.Option;
 
 /**
+ * Base class for the two variants of internal queue.
  * @author Peter Nerg
  * @since 1.1
  */
-final class PoolQueue<T> {
+abstract class PoolQueue<T> {
 
-	private transient PooledInstance<T> first;
-	private transient PooledInstance<T> last;
-	private transient int size = 0;
+	transient PooledInstance<T> first;
+	transient PooledInstance<T> last;
 
 	/**
-	 * Adds an item to the head/first of the queue.
-	 * 
+	 * Adds an item to the queue
 	 * @param item
 	 */
-	void addFirst(T item) {
-		this.first = new PooledInstance<>(item, first);
-
+	void add(T item) {
 		// queue was empty, now both head/tail are the same item
-		if (last == null) {
-			last = first;
+		if(first == null && last == null) {
+			this.first = new PooledInstance<>(item, first);
+			this.last = this.first;
+			return;
 		}
+		
+		addToQueue(item);
 	}
-
-	void addLast(T item) {
-		PooledInstance<T> pi = new PooledInstance<>(item);
-		// non-null last, set it to point to the "new" last
-		if (last != null) {
-			last.next(pi);
-		}
-		last = pi;
-
-		// queue was empty, now both head/tail are the same item
-		if (first == null) {
-			first = last;
-		}
-	}
-
+	
+	protected abstract void addToQueue(T item);
+	
 	Option<T> head() {
 		Option<PooledInstance<T>> head;
 		// first take the head of the queue and validate it's defined, i.e. exists
@@ -75,7 +64,6 @@ final class PoolQueue<T> {
 		Option<PooledInstance<T>> o = Option(first);
 		o.forEach(pi -> {
 			first = pi.next();
-			size--;
 		});
 		return o;
 	}
