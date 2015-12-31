@@ -23,7 +23,7 @@ import simplepool.Constants.PoolMode;
  * Test the class {@link PoolQueue}
  * @author Peter Nerg
  */
-public class TestPoolImplLIFO extends AbstractPoolQueueTest {
+public class TestPoolImplLIFO extends AbstractPoolImplTest {
 
 	public TestPoolImplLIFO() {
 		super(PoolMode.LIFO);
