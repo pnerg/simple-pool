@@ -29,7 +29,7 @@ import junitextensions.TryAssert;
  * 
  * @author Peter Nerg
  */
-public class BaseAssert extends Assert implements OptionAssert, TryAssert {
+class BaseAssert extends Assert implements OptionAssert, TryAssert {
 
     static {
         // Configure language for proper logging outputs
