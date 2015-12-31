@@ -18,26 +18,22 @@ package simplepool;
 import org.junit.Test;
 
 /**
- * Test the class {@link PoolQueue}
+ * Test the class {@link PoolQueueFIFO}
  * @author Peter Nerg
  */
-public class TestPoolQueue extends BaseAssert {
+public class TestPoolQueueLIFO extends AbstractPoolQueueTest {
 
-	private final PoolQueue<String> queue = new PoolQueue<>();
-	
-	@Test
-	public void addFirst_emptyQueue() {
-		queue.addFirst("one");
+	public TestPoolQueueLIFO() {
+		super(new PoolQueueLIFO<>());
 	}
 	
 	@Test
-	public void addFirst_noneEmptyQueue() {
-		addFirst_emptyQueue();
-		queue.addFirst("two");
+	public void assertOrder() {
+		queue.add("one");
+		queue.add("two");
+		assertHead("two");
+		assertHead("one");
+		assertHeadIsEmpty();
 	}
 
-	@Test
-	public void head_emptyQueue() {
-		assertIsNone(queue.head());
-	}
 }

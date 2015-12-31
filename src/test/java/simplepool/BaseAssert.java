@@ -15,28 +15,21 @@
  */
 package simplepool;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.Locale;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import javascalautils.Failure;
-import javascalautils.None;
-import javascalautils.Option;
-import javascalautils.Some;
-import javascalautils.Try;
+import junitextensions.OptionAssert;
+import junitextensions.TryAssert;
 
 /**
  * Base test class.
  * 
  * @author Peter Nerg
  */
-public class BaseAssert extends Assert {
+public class BaseAssert extends Assert implements OptionAssert, TryAssert {
 
     static {
         // Configure language for proper logging outputs
@@ -54,29 +47,6 @@ public class BaseAssert extends Assert {
     @AfterClass
     public final static void resetTempDirectoryToTarget() {
         System.clearProperty("java.io.tmpdir");
-    }
-
-    /**
-     * Asserts that the provided class has a private default (non-argument) constructor. <br>
-     * This is a stupid workaround to please the coverage tools that otherwise whine about not covering private constructors.
-     * 
-     * @param clazz
-     * @throws NoSuchMethodException
-     * @throws SecurityException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
-     * @throws InvocationTargetException
-     */
-    public static <T extends Object> void assertPrivateConstructor(Class<T> clazz) throws ReflectiveOperationException {
-        Constructor<T> constructor = clazz.getDeclaredConstructor();
-        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
-        try {
-            constructor.setAccessible(true);
-            constructor.newInstance();
-        } finally {
-            constructor.setAccessible(false);
-        }
     }
 
     /**
@@ -155,57 +125,4 @@ public class BaseAssert extends Assert {
         }
     }
 
-    /**
-     * Assert that a collection is empty.
-     * 
-     * @param collection
-     * @param expectedSize
-     */
-    public static void assertIsEmpty(Collection<?> collection) {
-        assertNotNull(collection);
-        assertTrue(collection.isEmpty());
-    }
-
-    /**
-     * Assert a collection.
-     * 
-     * @param collection
-     * @param expectedSize
-     */
-    public static void assertCollection(Collection<?> collection, int expectedSize) {
-        assertNotNull(collection);
-        assertEquals(expectedSize, collection.size());
-    }
-
-    /**
-     * Asserts that the provided {@link Try} is a {@link Failure}
-     * @param t
-     */
-    public static void assertIsFailure(Try<?> t) {
-    	assertTrue("Expected the Try to be a Failure", t.isFailure());
-    }
-    
-    /**
-     * Asserts that the provided {@link Try} is a {@link Success}
-     * @param t
-     */
-    public static void assertIsSuccess(Try<?> t) {
-    	assertTrue("Expected the Try to be a Success", t.isSuccess());
-    }
-    
-    /**
-     * Assert that the provided {@link Option} is a {@link None}
-     * @param o
-     */
-    public static void assertIsNone(Option<?> o) {
-    	assertTrue("Expected the Option to be None", o.isEmpty());
-    }
-
-    /**
-     * Assert that the provided {@link Option} is a {@link Some}
-     * @param o
-     */
-    public static void assertIsSome(Option<?> o) {
-    	assertTrue("Expected the Option ["+o+"] to be Some", o.isDefined());
-    }
 }
