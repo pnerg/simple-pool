@@ -37,8 +37,9 @@ abstract class PoolQueue<T> {
 	 * @param item
 	 */
 	final synchronized void add(T item) {
-		// queue was empty, now both head/tail are the same item
-		if(first == null && last == null) {
+		// if first is null then queue is empty
+		// simply set both first/last to point to the new item
+		if(first == null) {
 			this.first = new PooledInstance<>(item, first);
 			this.last = this.first;
 			return;
