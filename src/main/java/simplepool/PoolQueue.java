@@ -23,14 +23,17 @@ import java.util.function.Consumer;
 import javascalautils.Option;
 
 /**
- * Base class for the two variants of internal queue.
+ * Base class for the two variants of internal queue. <br>
+ * The queue is a simplistic one-way linked list where we only really care of the first and last item in the Queue. <br>
+ * Each item ({@link PooledInstance}) has a pointer to the next in the queue. <br>
+ * The queue keeps track on the first and last instance making it very efficient to add instances to either start/end of the queue.
  * @author Peter Nerg
  * @since 1.1
  */
 abstract class PoolQueue<T> {
 
-	transient PooledInstance<T> first;
-	transient PooledInstance<T> last;
+	protected transient PooledInstance<T> first;
+	protected transient PooledInstance<T> last;
 
 	/**
 	 * Adds an item to the queue
