@@ -40,7 +40,7 @@ abstract class PoolQueue<T> {
 		// if first is null then queue is empty
 		// simply set both first/last to point to the new item
 		if(first == null) {
-			this.first = new PooledInstance<>(item, first);
+			this.first = new PooledInstance<>(item, null);
 			this.last = this.first;
 			return;
 		}
@@ -48,6 +48,12 @@ abstract class PoolQueue<T> {
 		addToQueue(item);
 	}
 	
+	/**
+	 * Takes the first valid (non-stale) item from the queue. <br>
+	 * The item is also removed from the queue. <br>
+	 * Should there be any invalid (stale) items at the front these are removed one by one until either a valid item is found or the end of the queue is met.
+	 * @return The item, None if no valid item was found
+	 */
 	final synchronized Option<T> head() {
 		Option<PooledInstance<T>> head;
 		// first take the head of the queue and validate it's defined, i.e. exists
@@ -83,10 +89,21 @@ abstract class PoolQueue<T> {
 		}
 	}
 	
+	/**
+	 * Adds the provided item to the queue. <br>
+	 * Where it's placed (first/last) depends on the queue implementation
+	 * @param item The item to add
+	 */
 	protected abstract void addToQueue(T item);
 	
+	/**
+	 * Takes/removes the first item in the queue. <br>
+	 * The pointer {@link #first} is set to be the next in line.
+	 * @return The first item, None if Queue was empty
+	 */
 	private Option<PooledInstance<T>> takeFirst() {
 		Option<PooledInstance<T>> o = Option(first);
+		//set the "first" pointer to be next() in line
 		o.forEach(pi -> {
 			first = pi.next();
 		});
