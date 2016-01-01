@@ -23,21 +23,25 @@ final class PoolableObject {
 
 	private final boolean isValid;
 	private boolean isDestroyed = false;
+	private String value;
 	
-	PoolableObject() {
-		this(true);
+	PoolableObject(String value) {
+		this(value, true);
 	}
 	
-	PoolableObject(boolean isValid) {
+	PoolableObject(String value, boolean isValid) {
+		this.value = value;
 		this.isValid = isValid;
 	}
 
 	boolean isValid() {
-		return isValid;
+		return isValid && !isDestroyed;
 	}
-
 	
 	void destroy() {
+		if(isDestroyed) {
+			throw new IllegalStateException("Instance is already destroyed");
+		}
 		isDestroyed = true;
 	}
 	
@@ -45,4 +49,39 @@ final class PoolableObject {
 		return isDestroyed;
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PoolableObject other = (PoolableObject) obj;
+		if (value == null) {
+			if (other.value != null)
+				return false;
+		} else if (!value.equals(other.value))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+":"+value;
+	}
 }

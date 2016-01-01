@@ -68,11 +68,11 @@ public class TestPoolImpl extends BaseAssert {
 	
 	@Test(timeout=5000)
 	public void returnInstance_objectFailsValidation() {
-		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.FIFO, Duration.ofDays(1));
+		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(""), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.FIFO, Duration.ofDays(1));
 		//must first take an instance to be able to return one
 		p.getInstance();
 		
-		PoolableObject po = new PoolableObject(false);
+		PoolableObject po = new PoolableObject("", false);
 		assertIsSuccess(p.returnInstance(po));
 		assertTrue(po.isDestroyed());
 	}

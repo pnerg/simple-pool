@@ -26,21 +26,21 @@ import org.junit.Test;
 public abstract class TestPoolQueueAbstract extends BaseAssert {
 
 	
-	protected final PoolQueue<String> queue;
+	protected final PoolQueue<PoolableObject> queue;
 
-	TestPoolQueueAbstract(PoolQueue<String> queue) {
+	TestPoolQueueAbstract(PoolQueue<PoolableObject> queue) {
 		this.queue = queue;
 	}
 	
 	@Test
 	public void add_emptyQueue() {
-		queue.add("one");
+		add("one");
 	}
 	
 	@Test
 	public void head_singleItemQueue() {
-		add_emptyQueue();
-		assertHead("one");
+		PoolableObject po = add("one");
+		assertHead(po);
 	}
 
 	@Test
@@ -55,15 +55,25 @@ public abstract class TestPoolQueueAbstract extends BaseAssert {
 
 	@Test
 	public void markStaleInstances_nonEmptyQueue() {
-		queue.add("one");
+		PoolableObject one = add("one");
 		queue.markStaleInstances(Duration.ofDays(1), s -> {});
 		
 		//should still have the same instance in Queue
-		assertHead("one");
+		assertHead(one);
 		assertHeadIsEmpty();
 	}
 	
-	void assertHead(String expected) {
+	/**
+	 * Creates a new {@link PoolableObject} and adds it to the queue.
+	 * @return
+	 */
+	PoolableObject add(String value) {
+		PoolableObject po = new PoolableObject(value);
+		queue.add(po);
+		return po;
+	}
+	
+	void assertHead(PoolableObject expected) {
 		assertSomeEquals(expected, queue.head());
 	}
 	

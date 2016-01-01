@@ -27,7 +27,7 @@ import simplepool.Constants.PoolMode;
  */
 public class TestFactory extends BaseAssert {
 
-	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject());
+	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject(""));
 	
 	@Test
 	public void create_withOnlyFactory() {

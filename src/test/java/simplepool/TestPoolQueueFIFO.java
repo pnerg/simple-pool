@@ -29,10 +29,10 @@ public class TestPoolQueueFIFO extends TestPoolQueueAbstract {
 	
 	@Test
 	public void assertOrder() {
-		queue.add("one");
-		queue.add("two");
-		assertHead("one");
-		assertHead("two");
+		PoolableObject one = add("one");
+		PoolableObject two = add("two");
+		assertHead(one);
+		assertHead(two);
 		assertHeadIsEmpty();
 	}
 

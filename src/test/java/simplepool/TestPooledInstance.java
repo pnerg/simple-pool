@@ -22,7 +22,7 @@ import org.junit.Test;
  *
  */
 public class TestPooledInstance extends BaseAssert {
-	private final PoolableObject object = new PoolableObject();
+	private final PoolableObject object = new PoolableObject("");
 	private final PooledInstance<PoolableObject> instance = new PooledInstance<>(object);
 			
 	@Test
