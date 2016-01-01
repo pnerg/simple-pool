@@ -21,19 +21,21 @@ package simplepool;
  */
 final class PoolableObject {
 
-	private final boolean isValid;
+	private final String value;
 	private boolean isDestroyed = false;
-	private String value;
+	private boolean isValid = true;
 	
 	PoolableObject(String value) {
-		this(value, true);
+		this.value = value;
 	}
 	
-	PoolableObject(String value, boolean isValid) {
-		this.value = value;
-		this.isValid = isValid;
+	/**
+	 * Will make this instance to fail validation
+	 */
+	void failValidation() {
+		this.isValid = false;
 	}
-
+	
 	boolean isValid() {
 		return isValid && !isDestroyed;
 	}
@@ -80,6 +82,10 @@ final class PoolableObject {
 		return true;
 	}
 
+	String value() {
+		return value;
+	}
+	
 	@Override
 	public String toString() {
 		return getClass().getSimpleName()+":"+value;

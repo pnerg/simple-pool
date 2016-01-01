@@ -16,6 +16,7 @@
 package simplepool;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
@@ -27,17 +28,18 @@ import simplepool.Constants.PoolMode;
  * @author Peter Nerg
  */
 public class TestPoolImpl extends BaseAssert {
-
-	final PoolImpl<String> pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, PoolMode.LIFO, Duration.ofDays(1));
+	
+	private final AtomicLong counter = new AtomicLong(1);
+	private final PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> new PoolableObject(""+counter.getAndIncrement()), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.LIFO, Duration.ofDays(1));
 	
 	@Test(timeout=5000)
 	public void getInstance_emptyQueue() throws Throwable {
-		assertEquals("Peter", pool.getInstance().get());
+		assertEquals("1", pool.getInstance().get().value());
 	}
 	
 	@Test(timeout=5000)
 	public void returnInstance_withoutTakingAnInstance() throws Throwable {
-		assertIsFailure(pool.returnInstance("This should fail"));
+		assertIsFailure(pool.returnInstance(new PoolableObject("This should fail")));
 	}
 
 	@Test(timeout=5000)
@@ -67,13 +69,12 @@ public class TestPoolImpl extends BaseAssert {
 	}
 	
 	@Test(timeout=5000)
-	public void returnInstance_objectFailsValidation() {
-		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(""), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.FIFO, Duration.ofDays(1));
+	public void returnInstance_objectFailsValidation() throws Throwable {
 		//must first take an instance to be able to return one
-		p.getInstance();
+		PoolableObject po = pool.getInstance().get();
+		po.failValidation();
 		
-		PoolableObject po = new PoolableObject("", false);
-		assertIsSuccess(p.returnInstance(po));
+		assertIsSuccess(pool.returnInstance(po));
 		assertTrue(po.isDestroyed());
 	}
 }
