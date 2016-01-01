@@ -26,28 +26,20 @@ import simplepool.Constants.PoolMode;
  * Base test cases for the {@link PoolQueue}
  * @author Peter Nerg
  */
-public abstract class AbstractPoolImplTest extends BaseAssert {
+public class TestPoolImpl extends BaseAssert {
 
-	final PoolImpl<String> pool;
-	private final PoolMode poolMode;
+	final PoolImpl<String> pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, PoolMode.LIFO, Duration.ofDays(1));
 	
-	AbstractPoolImplTest(PoolMode poolMode) {
-		this.poolMode = poolMode;
-		pool = new PoolImpl<>(() -> "Peter", 2, v -> true, v -> {}, poolMode, Duration.ofDays(1));
-	}
-	
-	@Test(timeout=5000)
-	public void returnInstance_beyondCapacity() {
-		assertIsSuccess(pool.returnInstance("one"));
-		assertIsSuccess(pool.returnInstance("two"));
-		assertIsFailure(pool.returnInstance("three"));
-	}
-
 	@Test(timeout=5000)
 	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("Peter", pool.getInstance().get());
 	}
 	
+	@Test(timeout=5000)
+	public void returnInstance_withoutTakingAnInstance() throws Throwable {
+		assertIsFailure(pool.returnInstance("This should fail"));
+	}
+
 	@Test(timeout=5000)
 	public void getInstance_Timeout() {
 		assertIsSuccess(pool.getInstance());
@@ -76,7 +68,10 @@ public abstract class AbstractPoolImplTest extends BaseAssert {
 	
 	@Test(timeout=5000)
 	public void returnInstance_objectFailsValidation() {
-		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), poolMode, Duration.ofDays(1));
+		PoolImpl<PoolableObject> p = new PoolImpl<>(() -> new PoolableObject(), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.FIFO, Duration.ofDays(1));
+		//must first take an instance to be able to return one
+		p.getInstance();
+		
 		PoolableObject po = new PoolableObject(false);
 		assertIsSuccess(p.returnInstance(po));
 		assertTrue(po.isDestroyed());

@@ -52,30 +52,22 @@ final class PoolImpl<T> implements Pool<T> {
 	// NamedSequenceThreadFactory("ObjectPool-Reaper"));
 
 	/** The actual queue implementation. */
-	private final Deque<PooledInstance<T>> queue = new ArrayDeque<>();
-
-	/**
-	 * Determines if the queue executes in FIFO (queue) or LIFO (stack) mode.
-	 */
-	private final PoolMode poolMode;
-
-	private final int poolSize;
+	private final PoolQueue<T> poolQueue;
 
 	/**
 	 * Acts as gate keeper only allowing a maximum number of concurrent users/threads for this pool.
 	 */
-	private final Semaphore permits;
-	private final ReentrantLock lock = new ReentrantLock();
+	private final Semaphore getPermits;
+	private final Semaphore returnPermits = new Semaphore(0);
 	private final Duration idleTimeout;
 
 	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout) {
+		poolQueue = poolMode == PoolMode.FIFO ? new PoolQueueFIFO<>() : new PoolQueueLIFO<>();
 		this.instanceFactory = instanceFactory;
-		poolSize = maxSize;
 		this.validator = validator;
 		this.destructor = destructor;
-		this.poolMode = poolMode;
 		this.idleTimeout = idleTimeout;
-		this.permits = new Semaphore(maxSize);
+		this.getPermits = new Semaphore(maxSize);
 	}
 
 	/*
@@ -87,11 +79,12 @@ final class PoolImpl<T> implements Pool<T> {
 	public Try<T> getInstance(Duration maxWaitTime) {
 		return Try(() -> {
 			// attempt to get a go ahead by acquiring a semaphore
-			if (!permits.tryAcquire(maxWaitTime.toMillis(), TimeUnit.MILLISECONDS)) {
-				throw new TimeoutException("Timeout waiting for idle object in the pool");
+			if (!getPermits.tryAcquire(maxWaitTime.toMillis(), TimeUnit.MILLISECONDS)) {
+				throw new TimeoutException("Timeout waiting for a free object in the pool");
 			}
 
-			return head().getOrElse(() -> createInstance());
+			returnPermits.release();
+			return poolQueue.head().getOrElse(() -> createInstance());
 		});
 	}
 
@@ -105,33 +98,22 @@ final class PoolImpl<T> implements Pool<T> {
 		return Try(() -> {
 			Validator.requireNonNull(instance);
 
-			PooledInstance<T> pooledInstance = new PooledInstance<>(instance);
+			if (!returnPermits.tryAcquire()) {
+				throw new PoolException("No permits left to return object to the pool");
+			}
 
 			// first validate the instance
 			// if we fail validation the instance is destroyed and the pooled
 			// instance is marked as destroyed
-			boolean isValid = validator.test(instance);
-			if (!isValid) {
-				destroy(pooledInstance);
+			if (validator.test(instance)) {
+				poolQueue.add(instance);
+			} else {
+				destructor.accept(instance);
 			}
 
-			try(AutoReleaseLock l = new AutoReleaseLock()) {
-				if (queue.size() >= poolSize) {
-					throw new PoolException("Pool is full");
-				}
+			// now release a permit to take a new item from the pool
+			getPermits.release();
 
-				// only add the instance back to the pool if it was valid
-				if (isValid) {
-					if (poolMode == PoolMode.FIFO)
-						queue.addLast(pooledInstance);
-					else
-						queue.addFirst(pooledInstance);
-				}
-
-				// now release a permit to take a new item from the pool
-				permits.release();
-			}
-			
 			return new Unit();
 		});
 	}
@@ -143,66 +125,9 @@ final class PoolImpl<T> implements Pool<T> {
 			// for some reason we failed to create an instance
 			// release the semaphore that was previously acquired otherwise
 			// me might drain all semaphores
-			permits.release();
+			getPermits.release();
 			throw new PoolException("Failed to create instance", ex);
 		}
 	}
 
-	private void destroy(PooledInstance<T> pooledInstance) {
-		if (pooledInstance.markAsUsedOrDestroyed()) {
-			destructor.accept(pooledInstance.instance());
-		}
-	}
-
-	/**
-	 * Get the first free instance from the queue. <br>
-	 * The instance is always drawn from the front of the queue.
-	 * 
-	 * @return The instance, or None if no valid instance was found
-	 */
-	private Option<T> head() {
-		Option<PooledInstance<T>> head = None();
-		try(AutoReleaseLock l = new AutoReleaseLock()) {
-			// first take the head of the queue and validate it's defined, i.e. exists
-			// then attempt to mark the instance as used
-			// if we fail to do so it means that the idle reaper has
-			// destroyed it, thus we skip and take the next
-			// keep looping until either a valid object is found or the end of the queue is reached
-			do {
-				 head = Option(queue.poll());
-			} while(head.isDefined() && !head.map(pi -> pi.markAsUsedOrDestroyed()).getOrElse(() -> false));
-			
-			return head.map(pi -> pi.instance());
-		}
-		
-	}
-
-	private void evictIdleInstances() {
-		long time2Evict = System.currentTimeMillis()-idleTimeout.toMillis();
-		queue.stream().filter(pi -> pi.lastUsed() < time2Evict).forEach(pi -> {
-				destroy(pi);
-				//TODO drop the item from the queue
-		});
-	}
-	
-	/**
-	 * Nothing but a wrapper to get auto/take-release of the internal lock. <br>
-	 * It's to be able to write try-with-resources statements that automatically close this class and thus releasing the lock.
-	 * @author Peter Nerg
-	 */
-	private final class AutoReleaseLock implements Closeable {
-
-		private AutoReleaseLock() {
-			lock.lock();
-		}
-
-		/**
-		 * Releases the lock taken in the constructor.
-		 */
-		@Override
-		public void close()  {
-			lock.unlock();
-		}
-		
-	}
 }

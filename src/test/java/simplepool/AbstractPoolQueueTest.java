@@ -21,7 +21,7 @@ import org.junit.Test;
  * Base test cases for the {@link PoolQueue}
  * @author Peter Nerg
  */
-abstract class AbstractPoolQueueTest extends BaseAssert {
+public abstract class AbstractPoolQueueTest extends BaseAssert {
 
 	
 	protected final PoolQueue<String> queue;

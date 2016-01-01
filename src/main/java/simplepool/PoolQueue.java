@@ -33,7 +33,7 @@ abstract class PoolQueue<T> {
 	 * Adds an item to the queue
 	 * @param item
 	 */
-	void add(T item) {
+	synchronized void add(T item) {
 		// queue was empty, now both head/tail are the same item
 		if(first == null && last == null) {
 			this.first = new PooledInstance<>(item, first);
@@ -46,7 +46,7 @@ abstract class PoolQueue<T> {
 	
 	protected abstract void addToQueue(T item);
 	
-	Option<T> head() {
+	synchronized Option<T> head() {
 		Option<PooledInstance<T>> head;
 		// first take the head of the queue and validate it's defined, i.e. exists
 		// then attempt to mark the instance as used
