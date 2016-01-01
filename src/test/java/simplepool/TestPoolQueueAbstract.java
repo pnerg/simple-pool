@@ -119,20 +119,4 @@ public abstract class TestPoolQueueAbstract extends BaseAssert {
 	void assertHeadIsEmpty() {
 		assertIsNone(queue.head());
 	}
-	
-	/**
-	 * Asserts that that the provided object has been destroyed due to going stale.
-	 * @param po
-	 */
-	void assertIsDestroyed(PoolableObject po) {
-		assertTrue("Expected ["+po+"] to be destroyed", po.isDestroyed());
-	}
-	
-	/**
-	 * Assert that the provided object is still valid, i.e. not destroyed.
-	 * @param po
-	 */
-	void assertIsValid(PoolableObject po) {
-		assertTrue("Expected ["+po+"] to be valid", po.isValid());
-	}
 }

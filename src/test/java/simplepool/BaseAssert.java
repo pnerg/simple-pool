@@ -124,5 +124,22 @@ public class BaseAssert extends Assert implements OptionAssert, TryAssert {
             assertEquals("The data on index [" + i + "] does not match", expected[i], actual[i]);
         }
     }
+    
+	/**
+	 * Asserts that that the provided object has been destroyed due to going stale.
+	 * @param po
+	 */
+	static void assertIsDestroyed(PoolableObject po) {
+		assertTrue("Expected ["+po+"] to be destroyed", po.isDestroyed());
+	}
+	
+	/**
+	 * Assert that the provided object is still valid, i.e. not destroyed.
+	 * @param po
+	 */
+	static void assertIsValid(PoolableObject po) {
+		assertTrue("Expected ["+po+"] to be valid", po.isValid());
+	}
+
 
 }

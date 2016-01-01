@@ -65,9 +65,18 @@ public class TestPoolImpl extends BaseAssert {
 	public void getInstance_failToCreateInstance() {
 		PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> {throw new Exception("Error, terror");}, 2, po -> true, po -> {}, PoolMode.FIFO, Duration.ofDays(1));
 		Try<PoolableObject> instance = pool.getInstance();
-		assertFalse(instance.isSuccess());
+		assertIsFailure(instance);
 	}
 	
+	@Test(timeout=5000)
+	public void returnInstance_ok() throws Throwable {
+		//must first take an instance to be able to return one
+		PoolableObject po = pool.getInstance().get();
+		
+		assertIsSuccess(pool.returnInstance(po));
+		assertIsValid(po);
+	}
+
 	@Test(timeout=5000)
 	public void returnInstance_objectFailsValidation() throws Throwable {
 		//must first take an instance to be able to return one
@@ -75,6 +84,6 @@ public class TestPoolImpl extends BaseAssert {
 		po.failValidation();
 		
 		assertIsSuccess(pool.returnInstance(po));
-		assertTrue(po.isDestroyed());
+		assertIsDestroyed(po);
 	}
 }
