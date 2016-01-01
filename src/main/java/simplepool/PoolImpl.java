@@ -119,6 +119,7 @@ final class PoolImpl<T> implements Pool<T> {
 			// release the semaphore that was previously acquired otherwise
 			// me might drain all semaphores
 			getPermits.release();
+			returnPermits.tryAcquire();
 			throw new PoolException("Failed to create instance", ex);
 		}
 	}
