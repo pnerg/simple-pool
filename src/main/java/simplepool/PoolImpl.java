@@ -15,22 +15,15 @@
  */
 package simplepool;
 
-import static javascalautils.OptionCompanion.None;
-import static javascalautils.OptionCompanion.Option;
 import static javascalautils.TryCompanion.Try;
 
-import java.io.Closeable;
 import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import javascalautils.Unit;
