@@ -114,7 +114,7 @@ final class PoolImpl<T> implements Pool<T> {
 			// now release a permit to take a new item from the pool
 			getPermits.release();
 
-			return new Unit();
+			return Unit.Instance;
 		});
 	}
 
