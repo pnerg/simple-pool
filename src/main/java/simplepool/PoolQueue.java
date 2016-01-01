@@ -17,6 +17,9 @@ package simplepool;
 
 import static javascalautils.OptionCompanion.Option;
 
+import java.time.Duration;
+import java.util.function.Consumer;
+
 import javascalautils.Option;
 
 /**
@@ -44,8 +47,6 @@ abstract class PoolQueue<T> {
 		addToQueue(item);
 	}
 	
-	protected abstract void addToQueue(T item);
-	
 	final synchronized Option<T> head() {
 		Option<PooledInstance<T>> head;
 		// first take the head of the queue and validate it's defined, i.e. exists
@@ -60,6 +61,29 @@ abstract class PoolQueue<T> {
 		return head.map(pi -> pi.instance());
 	}
 
+	/**
+	 * Finds and marks all stale instances as destroyed. <br>
+	 * A stale instance is an item that has been sitting in the pool for longer than the provided max idle time. <br>
+	 * Items are not expunged from the pool, only marked with {@link PooledInstance#markAsUsedOrDestroyed() markAsUsedOrDestroyed}. <br>
+	 * This way the object is anyways dropped when we pick items using {@link #head()}. <br>
+	 * Since we don't touch the structure of the queue we don't need to synchronize this operation. <br>
+	 * Thread safety is guaranteed by the {@link PooledInstance#markAsUsedOrDestroyed() markAsUsedOrDestroyed} operation.
+	 * @param maxIdleTime The maximum idle time
+	 * @param destructor The function used to destroy the instance
+	 */
+	final void markStaleInstances(Duration maxIdleTime, Consumer<T> destructor) {
+		long deadLine = System.currentTimeMillis()-maxIdleTime.toMillis();
+		PooledInstance<T> head = first;
+		while(head != null) {
+			if(head.lastUsed() < deadLine && head.markAsUsedOrDestroyed()) {
+				destructor.accept(head.instance());
+			}
+			head = head.next();
+		}
+	}
+	
+	protected abstract void addToQueue(T item);
+	
 	private Option<PooledInstance<T>> takeFirst() {
 		Option<PooledInstance<T>> o = Option(first);
 		o.forEach(pi -> {
