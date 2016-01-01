@@ -21,7 +21,7 @@ import org.junit.Test;
  * Test the class {@link PoolQueueFIFO}
  * @author Peter Nerg
  */
-public class TestPoolQueueLIFO extends AbstractPoolQueueTest {
+public class TestPoolQueueLIFO extends TestPoolQueueAbstract {
 
 	public TestPoolQueueLIFO() {
 		super(new PoolQueueLIFO<>());
