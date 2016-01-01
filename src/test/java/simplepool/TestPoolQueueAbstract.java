@@ -15,6 +15,8 @@
  */
 package simplepool;
 
+import java.time.Duration;
+
 import org.junit.Test;
 
 /**
@@ -44,6 +46,11 @@ public abstract class TestPoolQueueAbstract extends BaseAssert {
 	@Test
 	public void head_emptyQueue() {
 		assertHeadIsEmpty();
+	}
+	
+	@Test
+	public void markStaleInstances_emptyQueue() {
+		queue.markStaleInstances(Duration.ZERO, s -> {});
 	}
 	
 	void assertHead(String expected) {
