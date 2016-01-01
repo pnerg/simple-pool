@@ -31,7 +31,7 @@ public class TestPoolImpl extends BaseAssert {
 	
 	private final AtomicLong counter = new AtomicLong(1);
 	private final PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> new PoolableObject(""+counter.getAndIncrement()), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.LIFO, Duration.ofDays(1));
-	
+
 	@Test(timeout=5000)
 	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("1", pool.getInstance().get().value());

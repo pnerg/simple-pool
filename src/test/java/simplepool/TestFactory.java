@@ -16,52 +16,64 @@
 package simplepool;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
+import javascalautils.Try;
 import simplepool.Constants.PoolMode;
 
 /**
  * Test the class {@link Factory}
+ * 
  * @author Peter Nerg
  */
 public class TestFactory extends BaseAssert {
 
-	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject(""));
-	
+	private final AtomicLong counter = new AtomicLong(1);
+	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject("" + counter.getAndIncrement()));
+
 	@Test
-	public void create_withOnlyFactory() {
+	public void create_withOnlyFactory() throws Throwable {
 		Pool<PoolableObject> pool = factory.create();
-		assertNotNull(pool);
+		assertCreatedPool(pool);
 	}
-	
+
 	@Test
-	public void create_withSpecifiedSize() {
+	public void create_withSpecifiedSize() throws Throwable {
 		Pool<PoolableObject> pool = factory.ofSize(666).create();
-		assertNotNull(pool);
+		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withValidator() {
-		Pool<PoolableObject> pool = factory.withValidator(po -> true).create();
-		assertNotNull(pool);
+	public void create_withValidator() throws Throwable {
+		Pool<PoolableObject> pool = factory.withValidator(po -> po.isValid()).create();
+		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withDestructor() {
-		Pool<PoolableObject> pool = factory.withDestructor(po -> {}).create();
-		assertNotNull(pool);
+	public void create_withDestructor() throws Throwable {
+		Pool<PoolableObject> pool = factory.withDestructor(po -> po.destroy()).create();
+		assertCreatedPool(pool);
 	}
-	
+
 	@Test
-	public void create_withIdleTimeout() {
+	public void create_withIdleTimeout() throws Throwable {
 		Pool<PoolableObject> pool = factory.withIdleTimeout(Duration.ofMillis(666)).create();
-		assertNotNull(pool);
+		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withPoolMode() {
+	public void create_withPoolMode() throws Throwable {
 		Pool<PoolableObject> pool = factory.withPoolMode(PoolMode.LIFO).create();
+		assertCreatedPool(pool);
+	}
+
+	private void assertCreatedPool(Pool<PoolableObject> pool) throws Throwable {
 		assertNotNull(pool);
+		Try<PoolableObject> instance = pool.getInstance(Duration.ofMillis(69));
+		assertIsSuccess(instance);
+		assertEquals("1", instance.get().value());
+		pool.returnInstance(instance.get());
 	}
 }
