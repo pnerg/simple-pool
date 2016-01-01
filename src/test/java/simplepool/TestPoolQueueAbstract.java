@@ -52,6 +52,16 @@ public abstract class TestPoolQueueAbstract extends BaseAssert {
 	public void markStaleInstances_emptyQueue() {
 		queue.markStaleInstances(Duration.ZERO, s -> {});
 	}
+
+	@Test
+	public void markStaleInstances_nonEmptyQueue() {
+		queue.add("one");
+		queue.markStaleInstances(Duration.ofDays(1), s -> {});
+		
+		//should still have the same instance in Queue
+		assertHead("one");
+		assertHeadIsEmpty();
+	}
 	
 	void assertHead(String expected) {
 		assertSomeEquals(expected, queue.head());
