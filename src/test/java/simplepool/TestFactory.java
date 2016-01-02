@@ -34,46 +34,48 @@ public class TestFactory extends BaseAssert {
 	private final Factory<PoolableObject> factory = Factory.poolFor(() -> new PoolableObject("" + counter.getAndIncrement()));
 
 	@Test
-	public void create_withOnlyFactory() throws Throwable {
+	public void create_withOnlyFactory() {
 		Pool<PoolableObject> pool = factory.create();
 		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withSpecifiedSize() throws Throwable {
+	public void create_withSpecifiedSize() {
 		Pool<PoolableObject> pool = factory.ofSize(666).create();
 		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withValidator() throws Throwable {
+	public void create_withValidator() {
 		Pool<PoolableObject> pool = factory.withValidator(po -> false).create();
 		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withDestructor() throws Throwable {
+	public void create_withDestructor() {
 		Pool<PoolableObject> pool = factory.withDestructor(po -> po.destroy()).create();
 		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withIdleTimeout() throws Throwable {
+	public void create_withIdleTimeout(){
 		Pool<PoolableObject> pool = factory.withIdleTimeout(Duration.ofMillis(666)).create();
 		assertCreatedPool(pool);
 	}
 
 	@Test
-	public void create_withPoolMode() throws Throwable {
+	public void create_withPoolMode() {
 		Pool<PoolableObject> pool = factory.withPoolMode(PoolMode.LIFO).create();
 		assertCreatedPool(pool);
 	}
 
-	private void assertCreatedPool(Pool<PoolableObject> pool) throws Throwable {
+	private void assertCreatedPool(Pool<PoolableObject> pool) {
 		assertNotNull(pool);
 		Try<PoolableObject> instance = pool.getInstance(Duration.ofMillis(69));
 		assertIsSuccess(instance);
-		assertEquals("1", instance.get().value());
-		pool.returnInstance(instance.get());
+		instance.forEach(po ->{
+			assertEquals("1", po.value());
+			assertIsSuccess(pool.returnInstance(po));
+		});
 	}
 }
