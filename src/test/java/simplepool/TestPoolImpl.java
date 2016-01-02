@@ -15,7 +15,11 @@
  */
 package simplepool;
 
+import static javascalautils.OptionCompanion.Option;
+
 import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -26,7 +30,6 @@ import org.junit.Test;
 import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import simplepool.Constants.PoolMode;
-import static javascalautils.OptionCompanion.None;
 
 /**
  * Base test cases for the {@link PoolQueue}
@@ -36,14 +39,29 @@ import static javascalautils.OptionCompanion.None;
 public class TestPoolImpl extends BaseAssert {
 
 	private final AtomicLong counter = new AtomicLong(1);
+	private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
 	private final PoolImpl<PoolableObject> pool = createPool(() -> new PoolableObject("" + counter.getAndIncrement()));
 
 	@After
 	public void after() {
 		pool.destroy();
-		pool.destroy(); //invoking a second time shall make no difference
+		pool.destroy(); // invoking a second time shall make no difference
+		scheduledExecutorService.shutdownNow();
 	}
-	
+
+	@Test
+	public void assertIdleTimeout() throws Throwable {
+		PoolImpl<PoolableObject> idlingPool = createPool(()-> new PoolableObject("xxx"), Duration.ofMillis(10));
+		PoolableObject instance = idlingPool.getInstance().get();
+		idlingPool.returnInstance(instance);
+		
+		//let the idle reaper sweep
+		Thread.sleep(50);
+		
+		//should now be have been destroyed
+		assertIsDestroyed(instance);
+	}
+
 	@Test(timeout = 5000)
 	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("1", pool.getInstance().get().value());
@@ -103,12 +121,16 @@ public class TestPoolImpl extends BaseAssert {
 
 	@Test(expected = IllegalStateException.class)
 	public void getInstance_afterDestruction() throws TimeoutException, Throwable {
-		//destroy the pool and wait for it to be destroyed
+		// destroy the pool and wait for it to be destroyed
 		pool.destroy().result(1, TimeUnit.SECONDS);
-		pool.getInstance(); //pool is destroyed and shall yield an exception
+		pool.getInstance(); // pool is destroyed and shall yield an exception
 	}
-	
-	private static PoolImpl<PoolableObject> createPool(ThrowableFunction0<PoolableObject> instanceFactory) {
-		return new PoolImpl<>(instanceFactory, 2, po -> po.isValid(), po -> po.destroy(), PoolMode.FIFO, Duration.ofDays(1), None());
+
+	private PoolImpl<PoolableObject> createPool(ThrowableFunction0<PoolableObject> instanceFactory) {
+		return createPool(instanceFactory, Duration.ofDays(1));
+	}
+
+	private PoolImpl<PoolableObject> createPool(ThrowableFunction0<PoolableObject> instanceFactory, Duration idleTimeout) {
+		return new PoolImpl<>(instanceFactory, 2, po -> po.isValid(), po -> po.destroy(), PoolMode.FIFO, idleTimeout, Option(scheduledExecutorService));
 	}
 }

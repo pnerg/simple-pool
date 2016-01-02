@@ -74,7 +74,7 @@ final class PoolImpl<T> implements Pool<T> {
 		scheduledFuture = executor.map(ss -> {
 			return ss.scheduleWithFixedDelay(() -> {
 				poolQueue.markStaleInstances(idleTimeout, destructor);
-			} , delayMillis, delayMillis / 2, TimeUnit.MILLISECONDS);
+			} , delayMillis, delayMillis / 4, TimeUnit.MILLISECONDS);
 		});
 
 	}
