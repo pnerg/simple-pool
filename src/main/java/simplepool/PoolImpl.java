@@ -44,10 +44,6 @@ final class PoolImpl<T> implements Pool<T> {
 	private final ThrowableFunction0<T> instanceFactory;
 	private final Predicate<T> validator;
 	private final Consumer<T> destructor;
-	// /** Used to schedule and execute this idle object reaper. */
-	// private final ScheduledExecutorService scheduledExecutorService =
-	// Executors.newScheduledThreadPool(1, new
-	// NamedSequenceThreadFactory("ObjectPool-Reaper"));
 
 	/** The actual queue implementation. */
 	private final PoolQueue<T> poolQueue;
@@ -57,7 +53,7 @@ final class PoolImpl<T> implements Pool<T> {
 	 */
 	private final Semaphore getPermits;
 	private final Semaphore returnPermits = new Semaphore(0);
-	private final Option<ScheduledFuture<?>> scheduleWithFixedDelay;
+	private final Option<ScheduledFuture<?>> scheduledFuture;
 
 	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout, Option<ScheduledExecutorService> executor) {
 		poolQueue = poolMode == PoolMode.FIFO ? new PoolQueueFIFO<>() : new PoolQueueLIFO<>();
@@ -68,7 +64,7 @@ final class PoolImpl<T> implements Pool<T> {
 		
 		long delayMillis = idleTimeout.toMillis();
 		
-		scheduleWithFixedDelay = executor.map(ss -> {
+		scheduledFuture = executor.map(ss -> {
 			return ss.scheduleWithFixedDelay(() -> {
 				poolQueue.markStaleInstances(idleTimeout, destructor);
 			}, delayMillis, delayMillis/2, TimeUnit.MILLISECONDS);
@@ -130,7 +126,7 @@ final class PoolImpl<T> implements Pool<T> {
 	@Override
 	public Future<Unit> destroy() {
 		return Future(() -> {
-			
+			scheduledFuture.forEach(sf -> sf.cancel(true));
 			return Unit.Instance;
 		});
 	}
