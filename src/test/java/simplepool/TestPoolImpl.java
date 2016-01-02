@@ -20,70 +20,79 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
+import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import simplepool.Constants.PoolMode;
+import static javascalautils.OptionCompanion.None;
 
 /**
  * Base test cases for the {@link PoolQueue}
+ * 
  * @author Peter Nerg
  */
 public class TestPoolImpl extends BaseAssert {
-	
-	private final AtomicLong counter = new AtomicLong(1);
-	private final PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> new PoolableObject(""+counter.getAndIncrement()), 2, v -> v.isValid(), v -> v.destroy(), PoolMode.LIFO, Duration.ofDays(1));
 
-	@Test(timeout=5000)
+	private final AtomicLong counter = new AtomicLong(1);
+	private final PoolImpl<PoolableObject> pool = createPool(() -> new PoolableObject("" + counter.getAndIncrement()));
+
+	@Test(timeout = 5000)
 	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("1", pool.getInstance().get().value());
 	}
-	
-	@Test(timeout=5000)
+
+	@Test(timeout = 5000)
 	public void returnInstance_withoutTakingAnInstance() throws Throwable {
 		assertIsFailure(pool.returnInstance(new PoolableObject("This should fail")));
 	}
 
-	@Test(timeout=5000)
+	@Test(timeout = 5000)
 	public void getInstance_Timeout() {
 		assertIsSuccess(pool.getInstance());
 		assertIsSuccess(pool.getInstance());
 		assertIsFailure(pool.getInstance(Duration.ofMillis(5)));
 	}
-	
-	@Test(timeout=5000)
+
+	@Test(timeout = 5000)
 	public void returnInstance_nullObject() {
 		assertIsFailure(pool.returnInstance(null));
 	}
-	
-	@Test(timeout=5000)
+
+	@Test(timeout = 5000)
 	public void getInstance_exhaustPool() {
 		assertTrue(pool.getInstance().isSuccess());
 		assertTrue(pool.getInstance().isSuccess());
-		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess()); //should fail as pool size is only 2
+		assertFalse(pool.getInstance(Duration.ofMillis(5)).isSuccess()); // should fail as pool size is only 2
 	}
 
-	@Test(timeout=5000)
+	@Test(timeout = 5000)
 	public void getInstance_failToCreateInstance() {
-		PoolImpl<PoolableObject> pool = new PoolImpl<>(() -> {throw new Exception("Error, terror");}, 2, po -> true, po -> {}, PoolMode.FIFO, Duration.ofDays(1));
+		PoolImpl<PoolableObject> pool = createPool(() -> {
+			throw new Exception("Error, terror!!!");
+		});
 		Try<PoolableObject> instance = pool.getInstance();
 		assertIsFailure(instance);
 	}
-	
-	@Test(timeout=5000)
+
+	@Test(timeout = 5000)
 	public void returnInstance_ok() throws Throwable {
-		//must first take an instance to be able to return one
+		// must first take an instance to be able to return one
 		PoolableObject po = pool.getInstance().get();
-		
+
 		assertIsSuccess(pool.returnInstance(po));
 		assertIsValid(po);
 	}
 
-	@Test(timeout=5000)
+	@Test(timeout = 5000)
 	public void returnInstance_objectFailsValidation() throws Throwable {
-		//must first take an instance to be able to return one
+		// must first take an instance to be able to return one
 		PoolableObject po = pool.getInstance().get();
 		po.failValidation();
-		
+
 		assertIsSuccess(pool.returnInstance(po));
 		assertIsDestroyed(po);
+	}
+
+	private static PoolImpl<PoolableObject> createPool(ThrowableFunction0<PoolableObject> instanceFactory) {
+		return new PoolImpl<>(instanceFactory, 2, po -> po.isValid(), po -> po.destroy(), PoolMode.FIFO, Duration.ofDays(1), None());
 	}
 }

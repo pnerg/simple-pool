@@ -59,7 +59,7 @@ public class TestFactory extends BaseAssert {
 
 	@Test
 	public void create_withIdleTimeout(){
-		Pool<PoolableObject> pool = factory.withIdleTimeout(Duration.ofMillis(666)).create();
+		Pool<PoolableObject> pool = factory.withIdleTimeout(Duration.ofMillis(666), null).create();
 		assertCreatedPool(pool);
 	}
 

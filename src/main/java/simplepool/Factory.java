@@ -20,6 +20,7 @@ import static javascalautils.OptionCompanion.Option;
 import static javascalautils.Validator.requireNonNull;
 
 import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -44,7 +45,8 @@ public final class Factory<T> {
 	private PoolMode poolMode = PoolMode.FIFO;
 	private Option<Predicate<T>> validator = None();
 	private Option<Consumer<T>> destructor = None();
-	private Duration idleTime = Duration.ofMillis(Long.MAX_VALUE);
+	private Duration idleTime = Duration.ZERO;
+	private Option<ScheduledExecutorService> executor = None();
 
 	private Factory(ThrowableFunction0<T> instanceFactory) {
 		this.instanceFactory = instanceFactory;
@@ -135,11 +137,14 @@ public final class Factory<T> {
 	 * 
 	 * @param timeout
 	 *            The timeout
+	 * @param executor
+	 *            The scheduled executor to use for scheduling the eviction job
 	 * @return The pool factory
 	 * @since 1.1
 	 */
-	public Factory<T> withIdleTimeout(Duration timeout) {
+	public Factory<T> withIdleTimeout(Duration timeout, ScheduledExecutorService executor) {
 		this.idleTime = timeout;
+		this.executor = Option(executor);
 		return this;
 	}
 
@@ -152,9 +157,10 @@ public final class Factory<T> {
 	 */
 	public Pool<T> create() {
 		Predicate<T> v = validator.getOrElse(() -> t -> true); // default validator always states true
-		Consumer<T> c = destructor.getOrElse(() -> t -> {}); // default destructor does nothing
+		Consumer<T> c = destructor.getOrElse(() -> t -> {
+		}); // default destructor does nothing
 
-		return new PoolImpl<>(instanceFactory, size, v, c, poolMode, idleTime);
+		return new PoolImpl<>(instanceFactory, size, v, c, poolMode, idleTime, executor);
 	}
 
 }

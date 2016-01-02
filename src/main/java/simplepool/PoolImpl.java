@@ -18,12 +18,15 @@ package simplepool;
 import static javascalautils.TryCompanion.Try;
 
 import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javascalautils.Option;
 import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import javascalautils.Unit;
@@ -52,15 +55,23 @@ final class PoolImpl<T> implements Pool<T> {
 	 */
 	private final Semaphore getPermits;
 	private final Semaphore returnPermits = new Semaphore(0);
-	private final Duration idleTimeout;
+	private final Option<ScheduledFuture<?>> scheduleWithFixedDelay;
 
-	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout) {
+	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout, Option<ScheduledExecutorService> executor) {
 		poolQueue = poolMode == PoolMode.FIFO ? new PoolQueueFIFO<>() : new PoolQueueLIFO<>();
 		this.instanceFactory = instanceFactory;
 		this.validator = validator;
 		this.destructor = destructor;
-		this.idleTimeout = idleTimeout;
 		this.getPermits = new Semaphore(maxSize);
+		
+		long delayMillis = idleTimeout.toMillis();
+		
+		scheduleWithFixedDelay = executor.map(ss -> {
+			return ss.scheduleWithFixedDelay(() -> {
+				poolQueue.markStaleInstances(idleTimeout, destructor);
+			}, delayMillis, delayMillis/2, TimeUnit.MILLISECONDS);
+		});
+		
 	}
 
 	/*
