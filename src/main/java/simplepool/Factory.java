@@ -152,8 +152,7 @@ public final class Factory<T> {
 	 */
 	public Pool<T> create() {
 		Predicate<T> v = validator.getOrElse(() -> t -> true); // default validator always states true
-		Consumer<T> c = destructor.getOrElse(() -> t -> {
-		}); // default destructor does nothing
+		Consumer<T> c = destructor.getOrElse(() -> t -> {}); // default destructor does nothing
 
 		return new PoolImpl<>(instanceFactory, size, v, c, poolMode, idleTime);
 	}

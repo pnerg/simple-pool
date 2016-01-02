@@ -47,7 +47,7 @@ public class TestFactory extends BaseAssert {
 
 	@Test
 	public void create_withValidator() throws Throwable {
-		Pool<PoolableObject> pool = factory.withValidator(po -> po.isValid()).create();
+		Pool<PoolableObject> pool = factory.withValidator(po -> false).create();
 		assertCreatedPool(pool);
 	}
 
