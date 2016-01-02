@@ -19,6 +19,7 @@ import java.time.Duration;
 
 import javascalautils.Try;
 import javascalautils.Unit;
+import javascalautils.concurrent.Future;
 
 /**
  * Represents a pool of objects.
@@ -63,4 +64,13 @@ public interface Pool<T> {
 	 * @since 1.0
 	 */
 	Try<Unit> returnInstance(T instance);
+	
+	/**
+	 * Permanently destroys the pool and all instances in it. <br>
+	 * Should any instances be borrowed the operation will wait for them to be returned and destroy them as well. <br>
+	 * The operation will not be completed until all instances in the pool has been destroyed.
+	 * @return The Future that will be completed once the pool is completely destroyed
+	 * @since 1.1
+	 */
+	Future<Unit> destroy();
 }

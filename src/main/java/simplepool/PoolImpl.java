@@ -31,7 +31,9 @@ import javascalautils.ThrowableFunction0;
 import javascalautils.Try;
 import javascalautils.Unit;
 import javascalautils.Validator;
+import javascalautils.concurrent.Future;
 import simplepool.Constants.PoolMode;
+import static javascalautils.concurrent.FutureCompanion.Future;
 
 /**
  * The pool implementation.
@@ -122,6 +124,17 @@ final class PoolImpl<T> implements Pool<T> {
 		});
 	}
 
+	/* (non-Javadoc)
+	 * @see simplepool.Pool#destroy()
+	 */
+	@Override
+	public Future<Unit> destroy() {
+		return Future(() -> {
+			
+			return Unit.Instance;
+		});
+	}
+	
 	private T createInstance() {
 		try {
 			return instanceFactory.apply();

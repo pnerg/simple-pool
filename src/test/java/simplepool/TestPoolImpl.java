@@ -18,6 +18,7 @@ package simplepool;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.junit.After;
 import org.junit.Test;
 
 import javascalautils.ThrowableFunction0;
@@ -35,6 +36,11 @@ public class TestPoolImpl extends BaseAssert {
 	private final AtomicLong counter = new AtomicLong(1);
 	private final PoolImpl<PoolableObject> pool = createPool(() -> new PoolableObject("" + counter.getAndIncrement()));
 
+	@After
+	public void after() {
+		pool.destroy();
+	}
+	
 	@Test(timeout = 5000)
 	public void getInstance_emptyQueue() throws Throwable {
 		assertEquals("1", pool.getInstance().get().value());
