@@ -23,6 +23,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -55,21 +56,27 @@ final class PoolImpl<T> implements Pool<T> {
 	private final Semaphore returnPermits = new Semaphore(0);
 	private final Option<ScheduledFuture<?>> scheduledFuture;
 
+	/**
+	 * If this pool is valid. <br>
+	 * I.e. {@link #destroy()} has not been invoked.
+	 */
+	private final AtomicBoolean isValid = new AtomicBoolean(true);
+
 	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout, Option<ScheduledExecutorService> executor) {
 		poolQueue = poolMode == PoolMode.FIFO ? new PoolQueueFIFO<>() : new PoolQueueLIFO<>();
 		this.instanceFactory = instanceFactory;
 		this.validator = validator;
 		this.destructor = destructor;
 		this.getPermits = new Semaphore(maxSize);
-		
+
 		long delayMillis = idleTimeout.toMillis();
-		
+
 		scheduledFuture = executor.map(ss -> {
 			return ss.scheduleWithFixedDelay(() -> {
 				poolQueue.markStaleInstances(idleTimeout, destructor);
-			}, delayMillis, delayMillis/2, TimeUnit.MILLISECONDS);
+			} , delayMillis, delayMillis / 2, TimeUnit.MILLISECONDS);
 		});
-		
+
 	}
 
 	/*
@@ -79,6 +86,10 @@ final class PoolImpl<T> implements Pool<T> {
 	 */
 	@Override
 	public Try<T> getInstance(Duration maxWaitTime) {
+		if (!isValid.get()) {
+			throw new IllegalStateException("Pool has been destroyed.");
+		}
+
 		return Try(() -> {
 			// attempt to get a go ahead by acquiring a semaphore
 			if (!getPermits.tryAcquire(maxWaitTime.toMillis(), TimeUnit.MILLISECONDS)) {
@@ -120,17 +131,21 @@ final class PoolImpl<T> implements Pool<T> {
 		});
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see simplepool.Pool#destroy()
 	 */
 	@Override
 	public Future<Unit> destroy() {
 		return Future(() -> {
-			scheduledFuture.forEach(sf -> sf.cancel(true));
+			if (isValid.compareAndSet(true, false)) {
+				scheduledFuture.forEach(sf -> sf.cancel(true));
+			}
 			return Unit.Instance;
 		});
 	}
-	
+
 	private T createInstance() {
 		try {
 			return instanceFactory.apply();

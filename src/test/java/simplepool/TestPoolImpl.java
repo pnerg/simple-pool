@@ -16,6 +16,8 @@
 package simplepool;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.After;
@@ -39,6 +41,7 @@ public class TestPoolImpl extends BaseAssert {
 	@After
 	public void after() {
 		pool.destroy();
+		pool.destroy(); //invoking a second time shall make no difference
 	}
 	
 	@Test(timeout = 5000)
@@ -98,6 +101,13 @@ public class TestPoolImpl extends BaseAssert {
 		assertIsDestroyed(po);
 	}
 
+	@Test(expected = IllegalStateException.class)
+	public void getInstance_afterDestruction() throws TimeoutException, Throwable {
+		//destroy the pool and wait for it to be destroyed
+		pool.destroy().result(1, TimeUnit.SECONDS);
+		pool.getInstance(); //pool is destroyed and shall yield an exception
+	}
+	
 	private static PoolImpl<PoolableObject> createPool(ThrowableFunction0<PoolableObject> instanceFactory) {
 		return new PoolImpl<>(instanceFactory, 2, po -> po.isValid(), po -> po.destroy(), PoolMode.FIFO, Duration.ofDays(1), None());
 	}
