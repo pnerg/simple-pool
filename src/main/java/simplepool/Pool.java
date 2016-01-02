@@ -34,8 +34,8 @@ public interface Pool<T> {
 	/**
 	 * Request a object instance from the pool. <br>
 	 * If no free objects this method waits until an object is returned. <br>
-	 * <b>Warning! This means that the thread may be held here forever.</b>
-	 * 
+	 * <b>Warning! This means that the thread may be held here forever.</b> <br>
+	 * If the pool has been {@link #destroy() destroyed} an {@link IllegalStateException} is raised.
 	 * @return The object instance
 	 * @since 1.0
 	 */
@@ -45,8 +45,8 @@ public interface Pool<T> {
 
 	/**
 	 * Request a object instance from the pool. <br>
-	 * If no free objects this method waits (for the provided time) until an object is returned.
-	 * 
+	 * If no free objects this method waits (for the provided time) until an object is returned. <br>
+	 * If the pool has been {@link #destroy() destroyed} an {@link IllegalStateException} is raised.
 	 * @param maxWaitTime
 	 *            The time to wait for a free object
 	 * @return The object instance
@@ -56,8 +56,8 @@ public interface Pool<T> {
 
 	/**
 	 * Returns a borrowed instance to the pool. <br>
-	 * Should the pool be full and an attempt is made to return an instance the operation will result in a {@link javascalautils.Failure}.
-	 * 
+	 * Should the pool be full and an attempt is made to return an instance the operation will result in a {@link javascalautils.Failure}. <br>
+	 * This operation is safe to use even if the pool has been {@link #destroy() destroyed}.
 	 * @param instance
 	 *            The instance to return
 	 * @return The result of returning the instance
@@ -67,8 +67,10 @@ public interface Pool<T> {
 	
 	/**
 	 * Permanently destroys the pool and all instances in it. <br>
+	 * Attempts to use the pool after its destruction will yield an error. <br>
 	 * Should any instances be borrowed the operation will wait for them to be returned and destroy them as well. <br>
-	 * The operation will not be completed until all instances in the pool has been destroyed.
+	 * The operation will not be completed until all instances in the pool has been destroyed. <br>
+	 * Invoking the operation multiple times will make no difference.
 	 * @return The Future that will be completed once the pool is completely destroyed
 	 * @since 1.1
 	 */
