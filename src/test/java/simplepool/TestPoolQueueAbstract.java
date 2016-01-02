@@ -65,6 +65,23 @@ public abstract class TestPoolQueueAbstract extends BaseAssert {
 	}
 
 	@Test
+	public void markStaleInstances_nonEmptySomeInvalid() throws InterruptedException {
+		PoolableObject one = add("one");
+		Thread.sleep(100);
+		PoolableObject two = add("two");
+
+		//this should mark "one" as stale
+		queue.markStaleInstances(Duration.ofMillis(50), s -> s.destroy());
+		
+		assertIsDestroyed(one);
+		assertIsValid(two);
+		
+		//should now only have "two" in the queue
+		assertHead(two);
+		assertHeadIsEmpty();
+	}
+	
+	@Test
 	public void markStaleInstances_nonEmptyQueueFoundStale() throws InterruptedException {
 		PoolableObject one = add("one");
 		PoolableObject two = add("two");
