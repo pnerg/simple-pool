@@ -49,7 +49,7 @@ public class TestPoolImpl extends BaseAssert {
 		scheduledExecutorService.shutdownNow();
 	}
 
-	@Test
+	@Test(timeout = 5000)
 	public void assertIdleTimeout() throws Throwable {
 		PoolImpl<PoolableObject> idlingPool = createPool(()-> new PoolableObject("xxx"), Duration.ofMillis(10));
 		PoolableObject instance = idlingPool.getInstance().get();
