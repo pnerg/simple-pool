@@ -153,11 +153,10 @@ final class PoolImpl<T> implements Pool<T> {
 					getPermits.acquire();
 					permitsLeft--;
 				}
-				
 				// with all permits acquired we know all items in the pool have been returned (or never used)
 				// we can now safely destroy all items in the pool
-				// with Zero duration we will in practice mark any item in the pool as stale and destroy it
-				poolQueue.markStaleInstances(Duration.ZERO, destructor);
+				// with negative duration we will in practice mark any item in the pool as stale and destroy it
+				poolQueue.markStaleInstances(Duration.ofDays(-69), destructor);
 			}
 			return Unit.Instance;
 		});
