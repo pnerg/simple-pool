@@ -40,4 +40,9 @@ public class TestPooledInstance extends BaseAssert {
 		assertTrue(instance.markAsUsedOrDestroyed());
 		assertFalse(instance.markAsUsedOrDestroyed());
 	}
+	
+	@Test
+	public void toString_t() {
+		assertNotNull(instance.toString());
+	}
 }

@@ -79,4 +79,12 @@ final class PooledInstance<T> {
 	void next(PooledInstance<T> next) {
 		this.next = next;
 	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "PooledInstance:["+lastUsed+"]:["+inUse.get()+"]:["+instance+"]";
+	}
 }
