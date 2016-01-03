@@ -61,8 +61,10 @@ final class PoolImpl<T> implements Pool<T> {
 	 * I.e. {@link #destroy()} has not been invoked.
 	 */
 	private final AtomicBoolean isValid = new AtomicBoolean(true);
+	private final int maxSize;
 
 	PoolImpl(ThrowableFunction0<T> instanceFactory, int maxSize, Predicate<T> validator, Consumer<T> destructor, PoolMode poolMode, Duration idleTimeout, Option<ScheduledExecutorService> executor) {
+		this.maxSize = maxSize;
 		poolQueue = poolMode == PoolMode.FIFO ? new PoolQueueFIFO<>() : new PoolQueueLIFO<>();
 		this.instanceFactory = instanceFactory;
 		this.validator = validator;
@@ -141,6 +143,21 @@ final class PoolImpl<T> implements Pool<T> {
 		return Future(() -> {
 			if (isValid.compareAndSet(true, false)) {
 				scheduledFuture.forEach(sf -> sf.cancel(true));
+
+				// immediately drain all free resources.
+				int permitsLeft = maxSize - getPermits.drainPermits();
+
+				// still outstanding resources borrowed from the pool
+				// we must wait until each of them has been returned
+				while (permitsLeft > 0) {
+					getPermits.acquire();
+					permitsLeft--;
+				}
+				
+				// with all permits acquired we know all items in the pool have been returned (or never used)
+				// we can now safely destroy all items in the pool
+				// with Zero duration we will in practice mark any item in the pool as stale and destroy it
+				poolQueue.markStaleInstances(Duration.ZERO, destructor);
 			}
 			return Unit.Instance;
 		});
