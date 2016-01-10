@@ -55,7 +55,7 @@ One can of course write it all in a single statements:
 
 ## The Pool
 The _Pool_ is the holder of your instances.  
-Once you have your _Factory_ you create pool instances using the _create_method.
+Once you have your _Factory_ you create pool instances using the _create_ method.
 ```java
 Pool<Socket> pool = factory.create();
 ```
