@@ -128,8 +128,6 @@ final class PoolImpl<T> implements Pool<T> {
 
 			// now release a permit to take a new item from the pool
 			getPermits.release();
-
-			return Unit.Instance;
 		});
 	}
 
@@ -158,7 +156,6 @@ final class PoolImpl<T> implements Pool<T> {
 				// with negative duration we will in practice mark any item in the pool as stale and destroy it
 				poolQueue.markStaleInstances(Duration.ofDays(-69), destructor);
 			}
-			return Unit.Instance;
 		});
 	}
 
